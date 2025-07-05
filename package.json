@@ -4,7 +4,20 @@
   "description": "Universal EVM ↔ Bitcoin Atomic Swap System",
   "main": "index.js",
   "scripts": {
-    "compile": "hardhat compile"
+    "compile": "hardhat compile",
+    "deploy": "hardhat run evm/scripts/deploy-btc.ts --network sepolia",
+    "maker:create": "hardhat run evm/scripts/create-order-immediate.ts --network sepolia",
+    "taker:fill": "hardhat run evm/scripts/fill-order.ts --network sepolia",
+    "maker:escrow": "hardhat run evm/scripts/maker-escrow.ts --network sepolia",
+    "taker:fund": "hardhat run evm/scripts/taker-fund-htlc-real.ts --network sepolia",
+    "maker:claim": "hardhat run evm/scripts/maker-claim-btc.ts --network sepolia",
+    "taker:claim": "hardhat run evm/scripts/taker-claim-eth.ts --network sepolia",
+    "reverse:create": "hardhat run reverse/create-order-reverse.ts --network sepolia",
+    "reverse:taker:escrow": "hardhat run reverse/taker-escrow-reverse.ts --network sepolia",
+    "reverse:maker:htlc": "hardhat run reverse/maker-htlc-reverse.ts --network sepolia",
+    "reverse:maker:fund": "hardhat run reverse/maker-fund-htlc-reverse.ts --network sepolia",
+    "reverse:maker:claim": "hardhat run reverse/maker-claim-eth-reverse.ts --network sepolia",
+    "reverse:taker:claim": "hardhat run reverse/taker-claim-btc-reverse.ts --network sepolia"
   },
   "keywords": [
     "atomic-swap",
