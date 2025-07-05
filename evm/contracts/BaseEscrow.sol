@@ -50,6 +50,11 @@ abstract contract BaseEscrow is IBaseEscrow {
         _;
     }
 
+    modifier onlyValidSecret(bytes32 secret, Immutables calldata immutables) {
+        if (_sha256Bytes32(secret) != immutables.hashlock) revert InvalidSecret();
+        _;
+    }
+
     modifier onlyAfter(uint256 start) {
         if (block.timestamp < start) revert InvalidTime();
         _;
@@ -101,4 +106,13 @@ abstract contract BaseEscrow is IBaseEscrow {
      * @dev Should verify that the computed escrow address matches the address of this contract.
      */
     function _validateImmutables(Immutables calldata immutables) internal view virtual;
+
+    /**
+     * @dev Computes the SHA-256 hash of the secret (Bitcoin compatible).
+     * @param secret The secret that unlocks the escrow.
+     * @return ret The computed hash.
+     */
+    function _sha256Bytes32(bytes32 secret) private pure returns (bytes32 ret) {
+        return sha256(abi.encodePacked(secret));
+    }
 }
