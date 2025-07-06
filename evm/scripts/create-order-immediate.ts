@@ -100,7 +100,7 @@ async function main() {
         asset: "BTC",
         amount: "0.001", // 0.001 BTC
         address: "tb1qw04epl2mtg7un7a7dle8qzhs7we0s4u2gf5jqp",
-        publicKey: "035f652cf2fcc30d8415011926bb26adae3a9216f922b7aab929c470f965a862cb"
+        publicKey: "02757f19d8c1ac3875a20d544a090da2590288df9b3adf6bb9cba7a0ce75374008"
       }
     },
     

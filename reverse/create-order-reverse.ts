@@ -63,7 +63,7 @@ async function main() {
   
   // MAKER's Bitcoin details (in reverse flow, MAKER provides BTC)
   const makerBitcoinAddress = "tb1qw04epl2mtg7un7a7dle8qzhs7we0s4u2gf5jqp";
-  const makerBitcoinPublicKey = "035f652cf2fcc30d8415011926bb26adae3a9216f922b7aab929c470f965a862cb";
+  const makerBitcoinPublicKey = "02757f19d8c1ac3875a20d544a090da2590288df9b3adf6bb9cba7a0ce75374008";
   
   // Generate secure random secret
   const secretBytes = crypto.randomBytes(32);
