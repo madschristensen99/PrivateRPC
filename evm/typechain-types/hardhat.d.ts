@@ -18,9 +18,29 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.Ownable__factory>;
     getContractFactory(
+      name: "IERC1155Errors",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.IERC1155Errors__factory>;
+    getContractFactory(
+      name: "IERC20Errors",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.IERC20Errors__factory>;
+    getContractFactory(
+      name: "IERC721Errors",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.IERC721Errors__factory>;
+    getContractFactory(
       name: "IERC1363",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.IERC1363__factory>;
+    getContractFactory(
+      name: "ERC20",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.ERC20__factory>;
+    getContractFactory(
+      name: "IERC20Metadata",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.IERC20Metadata__factory>;
     getContractFactory(
       name: "IERC20",
       signerOrOptions?: ethers.Signer | FactoryOptions
@@ -46,18 +66,6 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.BaseEscrow__factory>;
     getContractFactory(
-      name: "BTCEscrowDst",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.BTCEscrowDst__factory>;
-    getContractFactory(
-      name: "BTCEscrowFactory",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.BTCEscrowFactory__factory>;
-    getContractFactory(
-      name: "BTCEscrowSrc",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.BTCEscrowSrc__factory>;
-    getContractFactory(
       name: "Escrow",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.Escrow__factory>;
@@ -74,10 +82,6 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.IBaseEscrow__factory>;
     getContractFactory(
-      name: "IBTCEscrowFactory",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.IBTCEscrowFactory__factory>;
-    getContractFactory(
       name: "IEscrow",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.IEscrow__factory>;
@@ -93,6 +97,42 @@ declare module "hardhat/types/runtime" {
       name: "IMerkleStorageInvalidator",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.IMerkleStorageInvalidator__factory>;
+    getContractFactory(
+      name: "IXMREscrowFactory",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.IXMREscrowFactory__factory>;
+    getContractFactory(
+      name: "MockToken",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.MockToken__factory>;
+    getContractFactory(
+      name: "Secp256k1",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.Secp256k1__factory>;
+    getContractFactory(
+      name: "SwapCreator",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.SwapCreator__factory>;
+    getContractFactory(
+      name: "XMREscrowDst",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.XMREscrowDst__factory>;
+    getContractFactory(
+      name: "XMREscrowFactory",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.XMREscrowFactory__factory>;
+    getContractFactory(
+      name: "XMREscrowSrc",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.XMREscrowSrc__factory>;
+    getContractFactory(
+      name: "ISwapCreator",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.ISwapCreator__factory>;
+    getContractFactory(
+      name: "XMRSwapAdapter",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.XMRSwapAdapter__factory>;
 
     getContractAt(
       name: "Ownable",
@@ -100,10 +140,35 @@ declare module "hardhat/types/runtime" {
       signer?: ethers.Signer
     ): Promise<Contracts.Ownable>;
     getContractAt(
+      name: "IERC1155Errors",
+      address: string | ethers.Addressable,
+      signer?: ethers.Signer
+    ): Promise<Contracts.IERC1155Errors>;
+    getContractAt(
+      name: "IERC20Errors",
+      address: string | ethers.Addressable,
+      signer?: ethers.Signer
+    ): Promise<Contracts.IERC20Errors>;
+    getContractAt(
+      name: "IERC721Errors",
+      address: string | ethers.Addressable,
+      signer?: ethers.Signer
+    ): Promise<Contracts.IERC721Errors>;
+    getContractAt(
       name: "IERC1363",
       address: string | ethers.Addressable,
       signer?: ethers.Signer
     ): Promise<Contracts.IERC1363>;
+    getContractAt(
+      name: "ERC20",
+      address: string | ethers.Addressable,
+      signer?: ethers.Signer
+    ): Promise<Contracts.ERC20>;
+    getContractAt(
+      name: "IERC20Metadata",
+      address: string | ethers.Addressable,
+      signer?: ethers.Signer
+    ): Promise<Contracts.IERC20Metadata>;
     getContractAt(
       name: "IERC20",
       address: string | ethers.Addressable,
@@ -135,21 +200,6 @@ declare module "hardhat/types/runtime" {
       signer?: ethers.Signer
     ): Promise<Contracts.BaseEscrow>;
     getContractAt(
-      name: "BTCEscrowDst",
-      address: string | ethers.Addressable,
-      signer?: ethers.Signer
-    ): Promise<Contracts.BTCEscrowDst>;
-    getContractAt(
-      name: "BTCEscrowFactory",
-      address: string | ethers.Addressable,
-      signer?: ethers.Signer
-    ): Promise<Contracts.BTCEscrowFactory>;
-    getContractAt(
-      name: "BTCEscrowSrc",
-      address: string | ethers.Addressable,
-      signer?: ethers.Signer
-    ): Promise<Contracts.BTCEscrowSrc>;
-    getContractAt(
       name: "Escrow",
       address: string | ethers.Addressable,
       signer?: ethers.Signer
@@ -170,11 +220,6 @@ declare module "hardhat/types/runtime" {
       signer?: ethers.Signer
     ): Promise<Contracts.IBaseEscrow>;
     getContractAt(
-      name: "IBTCEscrowFactory",
-      address: string | ethers.Addressable,
-      signer?: ethers.Signer
-    ): Promise<Contracts.IBTCEscrowFactory>;
-    getContractAt(
       name: "IEscrow",
       address: string | ethers.Addressable,
       signer?: ethers.Signer
@@ -194,15 +239,80 @@ declare module "hardhat/types/runtime" {
       address: string | ethers.Addressable,
       signer?: ethers.Signer
     ): Promise<Contracts.IMerkleStorageInvalidator>;
+    getContractAt(
+      name: "IXMREscrowFactory",
+      address: string | ethers.Addressable,
+      signer?: ethers.Signer
+    ): Promise<Contracts.IXMREscrowFactory>;
+    getContractAt(
+      name: "MockToken",
+      address: string | ethers.Addressable,
+      signer?: ethers.Signer
+    ): Promise<Contracts.MockToken>;
+    getContractAt(
+      name: "Secp256k1",
+      address: string | ethers.Addressable,
+      signer?: ethers.Signer
+    ): Promise<Contracts.Secp256k1>;
+    getContractAt(
+      name: "SwapCreator",
+      address: string | ethers.Addressable,
+      signer?: ethers.Signer
+    ): Promise<Contracts.SwapCreator>;
+    getContractAt(
+      name: "XMREscrowDst",
+      address: string | ethers.Addressable,
+      signer?: ethers.Signer
+    ): Promise<Contracts.XMREscrowDst>;
+    getContractAt(
+      name: "XMREscrowFactory",
+      address: string | ethers.Addressable,
+      signer?: ethers.Signer
+    ): Promise<Contracts.XMREscrowFactory>;
+    getContractAt(
+      name: "XMREscrowSrc",
+      address: string | ethers.Addressable,
+      signer?: ethers.Signer
+    ): Promise<Contracts.XMREscrowSrc>;
+    getContractAt(
+      name: "ISwapCreator",
+      address: string | ethers.Addressable,
+      signer?: ethers.Signer
+    ): Promise<Contracts.ISwapCreator>;
+    getContractAt(
+      name: "XMRSwapAdapter",
+      address: string | ethers.Addressable,
+      signer?: ethers.Signer
+    ): Promise<Contracts.XMRSwapAdapter>;
 
     deployContract(
       name: "Ownable",
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.Ownable>;
     deployContract(
+      name: "IERC1155Errors",
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.IERC1155Errors>;
+    deployContract(
+      name: "IERC20Errors",
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.IERC20Errors>;
+    deployContract(
+      name: "IERC721Errors",
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.IERC721Errors>;
+    deployContract(
       name: "IERC1363",
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.IERC1363>;
+    deployContract(
+      name: "ERC20",
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.ERC20>;
+    deployContract(
+      name: "IERC20Metadata",
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.IERC20Metadata>;
     deployContract(
       name: "IERC20",
       signerOrOptions?: ethers.Signer | DeployContractOptions
@@ -228,18 +338,6 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.BaseEscrow>;
     deployContract(
-      name: "BTCEscrowDst",
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.BTCEscrowDst>;
-    deployContract(
-      name: "BTCEscrowFactory",
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.BTCEscrowFactory>;
-    deployContract(
-      name: "BTCEscrowSrc",
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.BTCEscrowSrc>;
-    deployContract(
       name: "Escrow",
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.Escrow>;
@@ -256,10 +354,6 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.IBaseEscrow>;
     deployContract(
-      name: "IBTCEscrowFactory",
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.IBTCEscrowFactory>;
-    deployContract(
       name: "IEscrow",
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.IEscrow>;
@@ -275,6 +369,42 @@ declare module "hardhat/types/runtime" {
       name: "IMerkleStorageInvalidator",
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.IMerkleStorageInvalidator>;
+    deployContract(
+      name: "IXMREscrowFactory",
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.IXMREscrowFactory>;
+    deployContract(
+      name: "MockToken",
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.MockToken>;
+    deployContract(
+      name: "Secp256k1",
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.Secp256k1>;
+    deployContract(
+      name: "SwapCreator",
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.SwapCreator>;
+    deployContract(
+      name: "XMREscrowDst",
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.XMREscrowDst>;
+    deployContract(
+      name: "XMREscrowFactory",
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.XMREscrowFactory>;
+    deployContract(
+      name: "XMREscrowSrc",
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.XMREscrowSrc>;
+    deployContract(
+      name: "ISwapCreator",
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.ISwapCreator>;
+    deployContract(
+      name: "XMRSwapAdapter",
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.XMRSwapAdapter>;
 
     deployContract(
       name: "Ownable",
@@ -282,10 +412,35 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.Ownable>;
     deployContract(
+      name: "IERC1155Errors",
+      args: any[],
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.IERC1155Errors>;
+    deployContract(
+      name: "IERC20Errors",
+      args: any[],
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.IERC20Errors>;
+    deployContract(
+      name: "IERC721Errors",
+      args: any[],
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.IERC721Errors>;
+    deployContract(
       name: "IERC1363",
       args: any[],
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.IERC1363>;
+    deployContract(
+      name: "ERC20",
+      args: any[],
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.ERC20>;
+    deployContract(
+      name: "IERC20Metadata",
+      args: any[],
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.IERC20Metadata>;
     deployContract(
       name: "IERC20",
       args: any[],
@@ -317,21 +472,6 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.BaseEscrow>;
     deployContract(
-      name: "BTCEscrowDst",
-      args: any[],
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.BTCEscrowDst>;
-    deployContract(
-      name: "BTCEscrowFactory",
-      args: any[],
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.BTCEscrowFactory>;
-    deployContract(
-      name: "BTCEscrowSrc",
-      args: any[],
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.BTCEscrowSrc>;
-    deployContract(
       name: "Escrow",
       args: any[],
       signerOrOptions?: ethers.Signer | DeployContractOptions
@@ -352,11 +492,6 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.IBaseEscrow>;
     deployContract(
-      name: "IBTCEscrowFactory",
-      args: any[],
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.IBTCEscrowFactory>;
-    deployContract(
       name: "IEscrow",
       args: any[],
       signerOrOptions?: ethers.Signer | DeployContractOptions
@@ -376,6 +511,51 @@ declare module "hardhat/types/runtime" {
       args: any[],
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.IMerkleStorageInvalidator>;
+    deployContract(
+      name: "IXMREscrowFactory",
+      args: any[],
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.IXMREscrowFactory>;
+    deployContract(
+      name: "MockToken",
+      args: any[],
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.MockToken>;
+    deployContract(
+      name: "Secp256k1",
+      args: any[],
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.Secp256k1>;
+    deployContract(
+      name: "SwapCreator",
+      args: any[],
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.SwapCreator>;
+    deployContract(
+      name: "XMREscrowDst",
+      args: any[],
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.XMREscrowDst>;
+    deployContract(
+      name: "XMREscrowFactory",
+      args: any[],
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.XMREscrowFactory>;
+    deployContract(
+      name: "XMREscrowSrc",
+      args: any[],
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.XMREscrowSrc>;
+    deployContract(
+      name: "ISwapCreator",
+      args: any[],
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.ISwapCreator>;
+    deployContract(
+      name: "XMRSwapAdapter",
+      args: any[],
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.XMRSwapAdapter>;
 
     // default types
     getContractFactory(

@@ -1,0 +1,3 @@
+[submodule "xmr"]
+	path = xmr
+	url = https://github.com/madschristensen99/xmr-eth-atomic-swap

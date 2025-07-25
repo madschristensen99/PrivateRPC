@@ -27,7 +27,7 @@ contract EscrowDst is Escrow, IEscrowDst {
     constructor(uint32 rescueDelay, IERC20 accessToken) BaseEscrow(rescueDelay, accessToken) {}
 
     // Allow contract to receive ETH for testing
-    receive() external payable {}
+    receive() external payable virtual {}
 
     /**
      * @notice See {IBaseEscrow-withdraw}.
@@ -36,6 +36,7 @@ contract EscrowDst is Escrow, IEscrowDst {
      */
     function withdraw(bytes32 secret, Immutables calldata immutables)
         external
+        virtual
         onlyTaker(immutables)
         onlyAfter(immutables.timelocks.get(TimelocksLib.Stage.DstWithdrawal))
         onlyBefore(immutables.timelocks.get(TimelocksLib.Stage.DstCancellation))

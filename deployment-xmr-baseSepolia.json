@@ -1,0 +1,9 @@
+{
+  "network": "baseSepolia",
+  "factoryAddress": "0xA508AA1716b01E965a213507107F4C49E33Ce309",
+  "accessTokenAddress": "0x55A85aE0A42498FbAff97A83750aBB93274B92EC",
+  "srcImplementation": "0x75fD664B231Df5e2506f69d57fa03F1A0B0399b5",
+  "swapCreatorAddress": "0xf86B24804DD2C12E4EfD73591d78dad36C30aF46",
+  "swapAdapterAddress": "0xDD94Bad2257f5B14417FB475D7d104A96B98Cf59",
+  "timestamp": "2025-07-25T19:23:52.003Z"
+}

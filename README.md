@@ -1,46 +1,41 @@
-# 🌉 EVM ↔ Bitcoin Atomic Swap System
+# 🛡️ Hashield: EVM ↔ Monero Atomic Swap System
 
-A complete, production-ready atomic swap implementation enabling trustless exchanges between EVM chains (Ethereum, Polygon, BSC, etc.) and Bitcoin. Built on battle-tested 1inch smart contracts with real Bitcoin HTLC integration.
+A secure, modular implementation for trustless atomic swaps between EVM chains (Ethereum, Base, etc.) and Monero. Built on a robust escrow system with adapter-based architecture for maximum flexibility and security.
 
 ## 🏗️ Architecture Overview
 
-This system implements **Hash Time Locked Contracts (HTLCs)** on both chains to enable atomic swaps:
+This system implements **Hash Time Locked Contracts (HTLCs)** to enable atomic swaps between EVM chains and Monero:
 
-- **EVM Side**: Smart contracts based on 1inch's proven escrow system
-- **Bitcoin Side**: Native Bitcoin Script HTLCs with SegWit support
+- **EVM Side**: Smart contracts with deterministic factory deployment and adapter pattern
+- **Monero Side**: Native Monero cryptographic primitives for secure transactions
 - **Atomic Guarantee**: Either both parties get their desired assets, or both get refunded
 
 ### 🔄 Supported Swap Directions
 
-1. **EVM → BTC**: Trade ETH/ERC20 tokens for Bitcoin
-2. **BTC → EVM**: Trade Bitcoin for ETH/ERC20 tokens
+1. **EVM → XMR**: Trade ETH/ERC20 tokens for Monero
+2. **XMR → EVM**: Trade Monero for ETH/ERC20 tokens
 
 ## 🧱 Technical Components
 
 ### Smart Contracts (EVM)
-- `BTCEscrowFactory`: Creates escrow contracts
-- `BTCEscrowSrc`: Source escrow for EVM→BTC swaps  
-- `BTCEscrowDst`: Destination escrow for BTC→EVM swaps
-- **Deployed on Sepolia**: `0x46dD29f29FB4816A4E7bd1Dc6458d1dFCA097993`
-
-### Bitcoin HTLCs
-- **P2SH/P2WSH**: SegWit-compatible Hash Time Locked Contracts
-- **Testnet4 Support**: Full Bitcoin testnet integration
-- **DER Signatures**: Canonical signature encoding
-- **Real Transactions**: Broadcasts to Bitcoin network
+- `XMREscrowFactory`: Creates escrow contracts using deterministic deployment (Create2)
+- `XMREscrowSrc`: Source escrow for EVM→XMR swaps
+- `XMREscrowDst`: Destination escrow for XMR→EVM swaps
+- `XMRSwapAdapter`: Adapter contract connecting escrows with the SwapCreator
+- **Deployed on Base Sepolia**: Check deployment files for latest addresses
 
 ### Key Features
-- ✅ **Immediate Withdrawal**: Zero-delay atomic swaps
-- ✅ **Real Bitcoin**: Actual Bitcoin testnet transactions
-- ✅ **Secret Extraction**: Automatic secret revelation and extraction
-- ✅ **Ultra-Low Cost**: ~0.0003 ETH vs 10.51 ETH (99.997% savings)
-- ✅ **Production Ready**: Based on 1inch battle-tested contracts
+- ✅ **Modular Architecture**: Adapter pattern for easy integration and upgrades
+- ✅ **1-inch Compatible**: Deposit wrapper interface for aggregator compatibility
+- ✅ **Deterministic Deployment**: Create2 for predictable contract addresses
+- ✅ **Privacy-Preserving**: Works with Monero's privacy features
+- ✅ **Gas Optimized**: Minimal proxy pattern for efficient deployment
 
 ## 🚀 Quick Start
 
 ### Prerequisites
 ```bash
-# Node.js 16+
+# Node.js 18+
 node --version
 
 # Git
@@ -52,67 +47,73 @@ Create `.env` file:
 ```bash
 # EVM Configuration
 PRIVATE_KEY=your_ethereum_private_key
-SEPOLIA_RPC_URL=https://sepolia.drpc.org
+BASE_SEPOLIA_RPC_URL=https://sepolia.base.org
 ETHERSCAN_API_KEY=your_etherscan_key
+BASESCAN_API_KEY=your_basescan_key
 
-# Bitcoin Configuration (Testnet4)
-BITCOIN_PRIVATE_KEY=your_bitcoin_private_key_64_chars
-BITCOIN_ADDRESS=your_bitcoin_testnet_address
-BITCOIN_NETWORK=testnet4
+# Monero Configuration
+MONERO_WALLET_RPC=http://localhost:18083/json_rpc
+MONERO_DAEMON_RPC=http://localhost:18081/json_rpc
+MONERO_WALLET_PASSWORD=your_wallet_password
 ```
 
 ### Get Testnet Funds
-- **Sepolia ETH**: [Sepolia Faucet](https://sepoliafaucet.com/)
-- **Bitcoin Testnet**: [BTC Testnet Faucet](https://coinfaucet.eu/en/btc-testnet/)
+- **Base Sepolia ETH**: [Base Sepolia Faucet](https://www.coinbase.com/faucets/base-sepolia-faucet)
+- **Monero Stagenet**: [Monero Stagenet Faucet](https://stagenet-faucet.xmr.to/)
+
+### Installation
+```bash
+# Clone the repository
+git clone https://github.com/hashlocked-xyz/hashield.git
+cd hashield
+
+# Install dependencies
+npm install
+
+# Compile contracts
+cd evm
+npx hardhat compile
+```
 
 ## 💱 Swap Flows
 
-### 🔵 EVM → BTC Flow
+### 🔵 EVM → XMR Flow
 
-**Participants**: MAKER (provides ETH), TAKER (provides BTC)
+**Participants**: MAKER (provides ETH/ERC20), TAKER (provides XMR)
 
 ```bash
-# 1. MAKER creates order
-npm run maker:create
+# 1. Deploy contracts if needed
+npx hardhat run scripts/deploy-xmr.ts --network base-sepolia
 
-# 2. TAKER fills order (creates Bitcoin HTLC)
-ORDER_ID=order_123 npm run taker:fill
+# 2. MAKER creates escrow with funds
+npx hardhat run scripts/create-src-escrow.ts --network base-sepolia
 
-# 3. MAKER creates EVM escrow
-ORDER_ID=order_123 npm run maker:escrow
+# 3. TAKER sends XMR to MAKER's Monero address
+# (Using Monero wallet software)
 
-# 4. TAKER funds Bitcoin HTLC
-ORDER_ID=order_123 npm run taker:fund
+# 4. MAKER verifies XMR transaction and reveals secret
+npx hardhat run scripts/reveal-secret.ts --network base-sepolia
 
-# 5. MAKER claims BTC (reveals secret)
-ORDER_ID=order_123 npm run maker:claim
-
-# 6. TAKER claims ETH (using revealed secret)
-ORDER_ID=order_123 npm run taker:claim
+# 5. TAKER claims ETH/ERC20 using revealed secret
+npx hardhat run scripts/claim-src-escrow.ts --network base-sepolia
 ```
 
-### 🔴 BTC → EVM Flow (Reverse)
+### 🔴 XMR → EVM Flow
 
-**Participants**: MAKER (provides BTC), TAKER (provides ETH)
+**Participants**: MAKER (provides XMR), TAKER (provides ETH/ERC20)
 
 ```bash
-# 1. MAKER creates reverse order
-npm run reverse:create
+# 1. TAKER creates escrow with funds
+npx hardhat run scripts/create-dst-escrow.ts --network base-sepolia
 
-# 2. MAKER creates Bitcoin HTLC
-ORDER_ID=reverse_order_123 npm run reverse:maker:htlc
+# 2. MAKER sends XMR to TAKER's Monero address
+# (Using Monero wallet software)
 
-# 3. MAKER funds Bitcoin HTLC
-ORDER_ID=reverse_order_123 npm run reverse:maker:fund
+# 3. MAKER provides proof of XMR payment
+npx hardhat run scripts/record-xmr-tx.ts --network base-sepolia
 
-# 4. TAKER creates EVM escrow
-ORDER_ID=reverse_order_123 npm run reverse:taker:escrow
-
-# 5. MAKER claims ETH (reveals secret)
-ORDER_ID=reverse_order_123 npm run reverse:maker:claim
-
-# 6. TAKER claims BTC (using revealed secret)
-ORDER_ID=reverse_order_123 npm run reverse:taker:claim
+# 4. TAKER verifies XMR transaction and releases ETH/ERC20
+npx hardhat run scripts/claim-dst-escrow.ts --network base-sepolia
 ```
 
 ## 🔐 Cryptographic Flow
@@ -123,10 +124,10 @@ ORDER_ID=reverse_order_123 npm run reverse:taker:claim
 const secret = crypto.randomBytes(32);
 const secretHex = "0x" + secret.toString("hex");
 
-// 2. Create SHA-256 hashlock
-const hashlock = ethers.sha256(secretHex);
+// 2. Create keccak256 hashlock
+const hashlock = ethers.keccak256(secretHex);
 
-// 3. Use in both EVM contracts and Bitcoin HTLCs
+// 3. Use in both EVM contracts and Monero transactions
 ```
 
 ### Atomic Swap Guarantee
@@ -134,71 +135,94 @@ const hashlock = ethers.sha256(secretHex);
 2. **Claim Phase**: First claimer reveals secret, second uses revealed secret
 3. **Safety**: If either fails, both get refunded after timelock
 
-## 📝 Example: Complete EVM→BTC Swap
-
-```bash
-# Terminal 1 (MAKER)
-npm run maker:create
-# Output: ORDER_ID=order_1751234567890
-
-# Terminal 2 (TAKER)  
-ORDER_ID=order_1751234567890 npm run taker:fill
-
-# Terminal 1 (MAKER)
-ORDER_ID=order_1751234567890 npm run maker:escrow
-
-# Terminal 2 (TAKER)
-ORDER_ID=order_1751234567890 npm run taker:fund
-
-# Terminal 1 (MAKER) - Claims BTC, reveals secret
-ORDER_ID=order_1751234567890 npm run maker:claim
-# Secret now public on Bitcoin blockchain!
-
-# Terminal 2 (TAKER) - Uses revealed secret to claim ETH
-ORDER_ID=order_1751234567890 npm run taker:claim
-# ✅ Atomic swap complete!
-```
-
 ## 🛡️ Security Features
 
 ### Hash Time Locked Contracts (HTLCs)
-- **Hashlock**: SHA-256 hash ensures atomic execution
+- **Hashlock**: Keccak256 hash ensures atomic execution
 - **Timelock**: Automatic refunds prevent fund loss
-- **Script Verification**: Bitcoin Script validates all conditions
+- **Adapter Pattern**: Centralized swap state management
 
 ### Key Protections
 - **No Counterparty Risk**: Trustless execution
 - **Atomic Guarantee**: Both succeed or both fail
-- **Replay Protection**: Each swap uses unique secret
+- **Replay Protection**: Each swap uses unique hashlock
 - **Time Boundaries**: Configurable timelock periods
-
-### Tested Edge Cases
-- ✅ Invalid signatures
-- ✅ Wrong secrets  
-- ✅ Timeout scenarios
-- ✅ Network failures
-- ✅ Gas price spikes
 
 ## 🔧 Configuration
 
 ### Timelock Settings
 ```javascript
 timelock: {
-  withdrawalPeriod: 0,      // Immediate withdrawal
-  cancellationPeriod: 3600  // 1 hour safety period
+  withdrawalPeriod: 3600,     // 1 hour until withdrawal allowed
+  cancellationPeriod: 86400   // 24 hour safety period before refund
 }
 ```
 
 ### Network Support
-- **EVM**: Sepolia (testnet), easily extendable to mainnet
-- **Bitcoin**: Testnet4, ready for mainnet
+- **EVM**: Base Sepolia (testnet), easily extendable to mainnet and other EVM chains
+- **Monero**: Stagenet, ready for mainnet
 
 ## 📄 Smart Contract Details
 
-### BTCEscrowFactory
+### XMREscrowFactory
 ```solidity
-// Create source escrow (EVM→BTC)
-function createSrcEscrow(Immutables memory immutables) 
+// Create source escrow (EVM→XMR) using Create2 for deterministic addresses
+function createSrcEscrow(bytes32 salt, Immutables memory immutables) external returns (address) {
+    // Implementation uses minimal proxy pattern for gas efficiency
+}
+```
+
+### XMREscrowSrc
+```solidity
+// Deposit function for 1-inch compatibility
+function deposit(
+    bytes32 hashlock,
+    bytes32 claimCommitment,
+    bytes32 refundCommitment,
+    Immutables calldata immutables
+) external payable {
+    // Creates swap via adapter
+}
+```
+
+### XMRSwapAdapter
+```solidity
+// Create swap in SwapCreator
+function createSwap(
+    bytes32 hashlock,
+    bytes32 claimCommitment,
+    bytes32 refundCommitment,
+    address payable claimer,
+    uint256 timeout1,
+    uint256 timeout2,
+    address asset,
+    uint256 value,
+    uint256 nonce
+) external payable returns (bytes32) {
+    // Handles token transfers and creates swap
+}
+```
+
+## 📚 Development
+
+### Testing
+```bash
+# Run tests
+npx hardhat test
+
+# Run specific test file
+npx hardhat test test/XMREscrow.test.ts
+```
+
+### Deployment
+```bash
+# Deploy to Base Sepolia
+npx hardhat run scripts/deploy-xmr.ts --network base-sepolia
+```
+
+## 📜 License
+
+MIT
     external payable returns (address)
 
 // Create destination escrow (BTC→EVM)  
