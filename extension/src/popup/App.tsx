@@ -3,6 +3,54 @@ import { ethers } from 'ethers';
 import { useCCIPTransfer } from '../hooks/useCCIPTransfer';
 import { CCIPSupportedChainId, CCIP_CHAIN_ID_TO_NAME } from '../lib/ccipChains';
 
+// Define CSS keyframes for animations
+const keyframes = {
+  float: `
+    @keyframes float {
+      0% { transform: translateY(0px); }
+      50% { transform: translateY(-10px); }
+      100% { transform: translateY(0px); }
+    }
+  `,
+  spin: `
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+  `,
+  glow: `
+    @keyframes glow {
+      0% { box-shadow: 0 0 5px #06D6A0; }
+      50% { box-shadow: 0 0 20px #06D6A0, 0 0 30px #118AB2; }
+      100% { box-shadow: 0 0 5px #06D6A0; }
+    }
+  `,
+  bounce: `
+    @keyframes bounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-15px); }
+    }
+  `
+};
+
+// Inject keyframes into document head
+const injectKeyframes = () => {
+  const style = document.createElement('style');
+  style.textContent = Object.values(keyframes).join('\n');
+  document.head.appendChild(style);
+};
+
+// Colors for our hybrid theme
+const colors = {
+  background: '#0A0F1F',
+  primary: '#06D6A0',   // Bright cyan for primary actions
+  secondary: '#FFD166', // Warm yellow for secondary elements
+  accent: '#118AB2',    // Blue for accents
+  warning: '#FF6B6B',   // Soft red for warnings
+  text: '#FFFFFF',      // White text
+  textDark: '#333333'   // Dark text for light backgrounds
+};
+
 
 interface WalletInfo {
   masterAddress: string;
@@ -23,7 +71,7 @@ interface SessionAddress {
   isCurrent: boolean;
 }
 
-const App = () => {
+export default function App() {
   const [mnemonic, setMnemonic] = useState('');
   const [walletInfo, setWalletInfo] = useState<WalletInfo | null>(null);
   const [pendingTransactions, setPendingTransactions] = useState<PendingTransaction[]>([]);
@@ -61,6 +109,10 @@ const App = () => {
   const { currentStep, logs, error: transferError, messageId, executeCCIPTransfer, reset } = useCCIPTransfer();
 
   useEffect(() => {
+    // Inject our animation keyframes
+    injectKeyframes();
+    
+    // Load wallet data
     loadExistingWallet();
     loadAddressSpoofing();
     loadMasterBalance();
@@ -278,47 +330,139 @@ const App = () => {
       setWalletInfo(null);
       setMnemonic('');
       setError('');
+      
+      // Load balances and check if we should show deposit suggestion
+      const masterBalanceResponse = await chrome.runtime.sendMessage({ type: 'getMasterBalance' });
+      const poolBalanceResponse = await chrome.runtime.sendMessage({ type: 'getPoolBalance' });
+      
+      if (masterBalanceResponse && !masterBalanceResponse.error) {
+        setMasterBalance(masterBalanceResponse.balance);
+      }
+      if (poolBalanceResponse && !poolBalanceResponse.error) {
+        setPoolBalance(poolBalanceResponse.balance);
+      }
+      
+      // Show deposit suggestion if user has no funds in pool but has wallet balance
+      const poolBalanceNum = parseFloat(poolBalanceResponse?.balance || '0');
+      const masterBalanceNum = parseFloat(masterBalanceResponse?.balance || '0');
+      
+      if (poolBalanceNum === 0 && masterBalanceNum > 0) {
+        setShowDepositSuggestion(true);
+      }
     } catch (err) {
       console.error('Error clearing wallet:', err);
     }
   };
 
+// Helper function for animated elements
+const renderLoadingSpinner = () => (
+  <div style={{
+    display: 'flex',
+    justifyContent: 'center',
+    marginTop: '20px',
+    marginBottom: '20px'
+  }}>
+    <div style={{
+      width: '40px',
+      height: '40px',
+      borderRadius: '50%',
+      border: '4px solid transparent',
+      borderTopColor: '#FF6600',
+      borderBottomColor: '#FFFFFF',
+      animation: 'spin 1.5s linear infinite',
+      boxShadow: '0 0 15px rgba(255, 102, 0, 0.5)'
+    }}></div>
+  </div>
+);
+
+  // Return the main component UI
   return (
-    <div style={{ 
-      padding: '20px', 
-      width: '350px', 
-      minHeight: '400px',
-      fontFamily: 'Arial, sans-serif',
-      backgroundColor: 'white'
+  <div style={{
+    width: '360px',
+    minHeight: '500px',
+    padding: '20px',
+    boxSizing: 'border-box',
+    fontFamily: "'Roboto', 'Arial', sans-serif",
+    backgroundColor: '#101010',
+    color: '#FFFFFF',
+    position: 'relative',
+    overflow: 'hidden',
+    borderRadius: '8px',
+    borderLeft: '4px solid #FF6600',
+  }}>
+    {/* Monero-themed header accent */}
+    <div style={{
+      position: 'absolute',
+      top: 0,
+      right: 0,
+      width: '100%',
+      height: '4px',
+      background: 'linear-gradient(90deg, #FF6600 0%, #FF8C00 100%)',
+      zIndex: 1
+    }}></div>
+    <div style={{
+      position: 'absolute',
+      bottom: '10%',
+      left: '0',
+      width: '100%',
+      height: '1px',
+      background: 'linear-gradient(90deg, transparent, rgba(6, 214, 160, 0.4), transparent)',
+      zIndex: 0
+    }}></div>
+    
+    {/* Tech lines */}
+    <div style={{
+      position: 'absolute',
+      top: '10%',
+      left: '0',
+      width: '100%',
+      height: '1px',
+      background: 'linear-gradient(90deg, transparent, rgba(6, 214, 160, 0.4), transparent)',
+      zIndex: 0
+    }}></div>
+    <div style={{
+      position: 'absolute',
+      bottom: '10%',
+      left: '0',
+      width: '100%',
+      height: '1px',
+      background: 'linear-gradient(90deg, transparent, rgba(17, 138, 178, 0.4), transparent)',
+      zIndex: 0
+    }}></div>
+    
+    {/* Content container with relative positioning to appear above decorative elements */}
+    <div style={{
+      position: 'relative',
+      zIndex: 1
     }}>
-      <h2 style={{ margin: '0 0 20px 0', color: '#333', textAlign: 'center' }}>
-        Welcome to PrivacyLinks
-      </h2>
-      
-      {!walletInfo ? (
-        <div>
-          <div style={{ marginBottom: '15px' }}>
-            <label style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '5px', color: '#666' }}>
-              Enter 12-word PrivacyPools secret:
-              <span
-                title="For the demo, use a 12-word seed phrase with testnet funds"
-                style={{
-                  display: 'inline-block',
-                  width: '16px',
-                  height: '16px',
-                  backgroundColor: '#007bff',
-                  color: 'white',
-                  borderRadius: '50%',
-                  fontSize: '11px',
-                  fontWeight: 'bold',
-                  textAlign: 'center',
-                  lineHeight: '16px',
-                  cursor: 'help',
-                  userSelect: 'none'
-                }}
-              >
-                ?
-              </span>
+    <h2 style={{ margin: '0 0 20px 0', color: '#FFFFFF', textAlign: 'center', fontFamily: "'Roboto', 'Arial', sans-serif", fontWeight: 'bold', textShadow: '0 1px 2px rgba(0, 0, 0, 0.5)' }}>
+      <span style={{ color: '#FF6600' }}>Hash</span>ield
+    </h2>
+    
+    {!walletInfo ? (
+      <div>
+        <div style={{ marginBottom: '15px' }}>
+          <label style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '5px', color: '#FFFFFF', fontWeight: 'bold' }}>
+            Enter 12-word Hashield secret:
+            <span
+              title="For the demo, use a 12-word seed phrase with testnet funds"
+              style={{
+                display: 'inline-block',
+                width: '16px',
+                height: '16px',
+                backgroundColor: '#FF6600',
+                color: 'white',
+                borderRadius: '50%',
+                fontSize: '11px',
+                fontWeight: 'bold',
+                textAlign: 'center',
+                lineHeight: '16px',
+                cursor: 'help',
+                userSelect: 'none'
+              }}
+            >
+              ?
+            </span>
             </label>
             <textarea
               rows={3}
@@ -356,12 +500,15 @@ const App = () => {
             style={{
               width: '100%',
               padding: '10px',
-              backgroundColor: isImporting ? '#ccc' : '#007bff',
+              backgroundColor: isImporting ? '#333333' : '#FF6600',
               color: 'white',
               border: 'none',
               borderRadius: '4px',
               cursor: isImporting ? 'not-allowed' : 'pointer',
-              fontSize: '14px'
+              fontSize: '14px',
+              fontWeight: 'bold',
+              boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)',
+              transition: 'all 0.2s ease'
             }}
           >
             {isImporting ? 'Importing...' : 'Import Secret'}
@@ -377,7 +524,7 @@ const App = () => {
             borderRadius: '4px'
           }}>
             <h3 style={{ margin: '0 0 15px 0', color: '#333' }}>
-              PrivacyLinks Wallet
+              Hashield Wallet
             </h3>
             
             {/* <div style={{ marginBottom: '15px' }}>
@@ -1356,7 +1503,6 @@ const App = () => {
         </div>
       )}
     </div>
+  </div>
   );
-};
-
-export default App;
+}

@@ -1,5 +1,5 @@
 (() => {
-  console.log('🔥 PrivatePay wallet injecting at:', Date.now());
+  console.log('🔥 Hashield wallet injecting at:', Date.now());
   console.log('🔍 Current fetch function:', typeof window.fetch);
   console.log('🔍 Current XMLHttpRequest:', typeof window.XMLHttpRequest);
   
@@ -24,7 +24,7 @@
     },
     
     request: async ({ method, params }) => {
-      console.log('🔍 PrivatePay intercepted:', method, params);
+      console.log('🔍 Hashield intercepted:', method, params);
       
       // Special logging for balance requests
       if (method === 'eth_getBalance') {
@@ -82,7 +82,7 @@
   // Also set common MetaMask globals
   window.web3 = { currentProvider: ethereumProvider };
   
-  console.log('PrivatePay wallet injected!', window.ethereum);
+  console.log('Hashield wallet injected!', window.ethereum);
   
   // Prevent MetaMask app redirects by intercepting clicks
   document.addEventListener('click', (e) => {
@@ -90,7 +90,7 @@
     if (target && target.href && target.href.includes('metamask://')) {
       e.preventDefault();
       e.stopPropagation();
-      console.log('Blocked MetaMask app redirect, using PrivatePay instead');
+      console.log('Blocked MetaMask app redirect, using Hashield instead');
       return false;
     }
   }, true);
@@ -102,10 +102,10 @@
   window.dispatchEvent(new CustomEvent('eip6963:announceProvider', {
     detail: {
       info: {
-        uuid: 'privatepay-wallet',
-        name: 'PrivatePay',
+        uuid: 'hashield-wallet',
+        name: 'Hashield',
         icon: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTYiIGhlaWdodD0iMTYiIHZpZXdCb3g9IjAgMCAxNiAxNiI+PHJlY3Qgd2lkdGg9IjE2IiBoZWlnaHQ9IjE2IiBmaWxsPSIjMDA3YmZmIi8+PC9zdmc+',
-        rdns: 'com.privatepay.wallet'
+        rdns: 'xyz.hashield.wallet'
       },
       provider: ethereumProvider
     }

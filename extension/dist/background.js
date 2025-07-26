@@ -24784,7 +24784,7 @@
                 chrome.notifications.create({
                   type: "basic",
                   iconUrl: "icon32.png",
-                  title: "PrivatePay Transaction",
+                  title: "Hashield Transaction",
                   message: `Open extension to confirm transaction`
                 });
               } catch (e) {

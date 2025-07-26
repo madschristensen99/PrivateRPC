@@ -1,7 +1,7 @@
 {
-  "name": "ethglobal-cannes",
-  "version": "1.0.0",
-  "description": "",
+  "name": "hashield-extension",
+  "version": "0.1.0",
+  "description": "Secure cross-chain transactions with Monero-Ethereum atomic swaps",
   "main": "index.js",
   "scripts": {
     "build": "node build.js",

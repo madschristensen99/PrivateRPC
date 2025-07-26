@@ -54889,354 +54889,397 @@ ${prettyStateOverride(stateOverride)}`;
   });
 
   // src/popup/App.tsx
-  var import_react2, import_jsx_runtime, App, App_default;
-  var init_App = __esm({
-    "src/popup/App.tsx"() {
-      "use strict";
-      import_react2 = __toESM(require_react());
-      init_lib2();
-      init_useCCIPTransfer();
-      init_ccipChains();
-      import_jsx_runtime = __toESM(require_jsx_runtime());
-      App = () => {
-        const [mnemonic, setMnemonic] = (0, import_react2.useState)("");
-        const [walletInfo, setWalletInfo] = (0, import_react2.useState)(null);
-        const [pendingTransactions, setPendingTransactions] = (0, import_react2.useState)([]);
-        const [isImporting, setIsImporting] = (0, import_react2.useState)(false);
-        const [error, setError] = (0, import_react2.useState)("");
-        const [addressSpoofing, setAddressSpoofing] = (0, import_react2.useState)(true);
-        const [showSessionList, setShowSessionList] = (0, import_react2.useState)(false);
-        const [sessionAddresses, setSessionAddresses] = (0, import_react2.useState)([]);
-        const [masterBalance, setMasterBalance] = (0, import_react2.useState)("0");
-        const [poolBalance, setPoolBalance] = (0, import_react2.useState)("0");
-        const [showDepositSuggestion, setShowDepositSuggestion] = (0, import_react2.useState)(false);
-        const [showPayUSDC, setShowPayUSDC] = (0, import_react2.useState)(false);
-        const [showPaymentOverview, setShowPaymentOverview] = (0, import_react2.useState)(false);
-        const [transactionProgress, setTransactionProgress] = (0, import_react2.useState)(null);
-        const [paymentForm, setPaymentForm] = (0, import_react2.useState)({
-          destinationAddress: "",
-          amount: "",
-          destinationChain: 11155111 /* ETH_SEPOLIA */,
-          tokenType: "USDC"
+  function App() {
+    const [mnemonic, setMnemonic] = (0, import_react2.useState)("");
+    const [walletInfo, setWalletInfo] = (0, import_react2.useState)(null);
+    const [pendingTransactions, setPendingTransactions] = (0, import_react2.useState)([]);
+    const [isImporting, setIsImporting] = (0, import_react2.useState)(false);
+    const [error, setError] = (0, import_react2.useState)("");
+    const [addressSpoofing, setAddressSpoofing] = (0, import_react2.useState)(true);
+    const [showSessionList, setShowSessionList] = (0, import_react2.useState)(false);
+    const [sessionAddresses, setSessionAddresses] = (0, import_react2.useState)([]);
+    const [masterBalance, setMasterBalance] = (0, import_react2.useState)("0");
+    const [poolBalance, setPoolBalance] = (0, import_react2.useState)("0");
+    const [showDepositSuggestion, setShowDepositSuggestion] = (0, import_react2.useState)(false);
+    const [showPayUSDC, setShowPayUSDC] = (0, import_react2.useState)(false);
+    const [showPaymentOverview, setShowPaymentOverview] = (0, import_react2.useState)(false);
+    const [transactionProgress, setTransactionProgress] = (0, import_react2.useState)(null);
+    const [paymentForm, setPaymentForm] = (0, import_react2.useState)({
+      destinationAddress: "",
+      amount: "",
+      destinationChain: 11155111 /* ETH_SEPOLIA */,
+      tokenType: "USDC"
+    });
+    const { currentStep, logs, error: transferError, messageId, executeCCIPTransfer, reset } = useCCIPTransfer();
+    (0, import_react2.useEffect)(() => {
+      injectKeyframes();
+      loadExistingWallet();
+      loadAddressSpoofing();
+      loadMasterBalance();
+      loadPoolBalance();
+      const progressInterval = setInterval(loadTransactionProgress, 1e3);
+      return () => clearInterval(progressInterval);
+    }, []);
+    const loadMasterBalance = async () => {
+      try {
+        const response = await chrome.runtime.sendMessage({ type: "getMasterBalance" });
+        if (response && !response.error) {
+          setMasterBalance(response.balance);
+        }
+      } catch (err) {
+        console.error("Error loading master balance:", err);
+      }
+    };
+    const loadPoolBalance = async () => {
+      try {
+        const response = await chrome.runtime.sendMessage({ type: "getPoolBalance" });
+        if (response && !response.error) {
+          setPoolBalance(response.balance);
+        }
+      } catch (err) {
+        console.error("Error loading pool balance:", err);
+      }
+    };
+    const loadTransactionProgress = async () => {
+      try {
+        const response = await chrome.runtime.sendMessage({ type: "getTransactionProgress" });
+        if (response && response.progress) {
+          setTransactionProgress(response.progress);
+        } else {
+          setTransactionProgress(null);
+        }
+      } catch (err) {
+        console.error("Error loading transaction progress:", err);
+      }
+    };
+    const depositToPool = async (amount) => {
+      try {
+        const response = await chrome.runtime.sendMessage({ type: "depositToPool", amount });
+        if (response && !response.error) {
+          await loadMasterBalance();
+          await loadPoolBalance();
+          setShowDepositSuggestion(false);
+          return response;
+        } else {
+          throw new Error(response.error || "Deposit failed");
+        }
+      } catch (err) {
+        console.error("Error depositing to pool:", err);
+        throw err;
+      }
+    };
+    const loadAddressSpoofing = async () => {
+      try {
+        const result = await chrome.storage.local.get(["addressSpoofing"]);
+        setAddressSpoofing(result.addressSpoofing || true);
+      } catch (err) {
+        console.error("Error loading address spoofing setting:", err);
+      }
+    };
+    const toggleAddressSpoofing = async () => {
+      const newValue = !addressSpoofing;
+      setAddressSpoofing(newValue);
+      try {
+        await chrome.storage.local.set({ addressSpoofing: newValue });
+        console.log("Address spoofing set to:", newValue);
+      } catch (err) {
+        console.error("Error saving address spoofing setting:", err);
+      }
+    };
+    const loadSessionAddresses = async () => {
+      try {
+        const response = await chrome.runtime.sendMessage({ type: "getAllSessions" });
+        if (response && !response.error) {
+          setSessionAddresses(response);
+        }
+      } catch (err) {
+        console.error("Error loading session addresses:", err);
+      }
+    };
+    const switchToSession = async (sessionNumber) => {
+      try {
+        const response = await chrome.runtime.sendMessage({
+          type: "switchToSession",
+          sessionNumber
         });
-        const { currentStep, logs, error: transferError, messageId, executeCCIPTransfer, reset } = useCCIPTransfer();
-        (0, import_react2.useEffect)(() => {
-          loadExistingWallet();
-          loadAddressSpoofing();
+        if (response && !response.error) {
+          await loadExistingWallet();
+          await loadSessionAddresses();
+          setShowSessionList(false);
+        }
+      } catch (err) {
+        console.error("Error switching session:", err);
+      }
+    };
+    const openEtherscan = (address) => {
+      const etherscanUrl = `https://sepolia.etherscan.io/address/${address}`;
+      chrome.tabs.create({ url: etherscanUrl });
+    };
+    const loadExistingWallet = async () => {
+      try {
+        const response = await chrome.runtime.sendMessage({ type: "getWalletInfo" });
+        if (response && !response.error) {
+          setWalletInfo(response);
           loadMasterBalance();
-          loadPoolBalance();
-          const progressInterval = setInterval(loadTransactionProgress, 1e3);
-          return () => clearInterval(progressInterval);
-        }, []);
-        const loadMasterBalance = async () => {
-          try {
-            const response = await chrome.runtime.sendMessage({ type: "getMasterBalance" });
-            if (response && !response.error) {
-              setMasterBalance(response.balance);
-            }
-          } catch (err) {
-            console.error("Error loading master balance:", err);
-          }
-        };
-        const loadPoolBalance = async () => {
-          try {
-            const response = await chrome.runtime.sendMessage({ type: "getPoolBalance" });
-            if (response && !response.error) {
-              setPoolBalance(response.balance);
-            }
-          } catch (err) {
-            console.error("Error loading pool balance:", err);
-          }
-        };
-        const loadTransactionProgress = async () => {
-          try {
-            const response = await chrome.runtime.sendMessage({ type: "getTransactionProgress" });
-            if (response && response.progress) {
-              setTransactionProgress(response.progress);
-            } else {
-              setTransactionProgress(null);
-            }
-          } catch (err) {
-            console.error("Error loading transaction progress:", err);
-          }
-        };
-        const depositToPool = async (amount) => {
-          try {
-            const response = await chrome.runtime.sendMessage({ type: "depositToPool", amount });
-            if (response && !response.error) {
-              await loadMasterBalance();
-              await loadPoolBalance();
-              setShowDepositSuggestion(false);
-              return response;
-            } else {
-              throw new Error(response.error || "Deposit failed");
-            }
-          } catch (err) {
-            console.error("Error depositing to pool:", err);
-            throw err;
-          }
-        };
-        const loadAddressSpoofing = async () => {
-          try {
-            const result = await chrome.storage.local.get(["addressSpoofing"]);
-            setAddressSpoofing(result.addressSpoofing || true);
-          } catch (err) {
-            console.error("Error loading address spoofing setting:", err);
-          }
-        };
-        const toggleAddressSpoofing = async () => {
-          const newValue = !addressSpoofing;
-          setAddressSpoofing(newValue);
-          try {
-            await chrome.storage.local.set({ addressSpoofing: newValue });
-            console.log("Address spoofing set to:", newValue);
-          } catch (err) {
-            console.error("Error saving address spoofing setting:", err);
-          }
-        };
-        const loadSessionAddresses = async () => {
-          try {
-            const response = await chrome.runtime.sendMessage({ type: "getAllSessions" });
-            if (response && !response.error) {
-              setSessionAddresses(response);
-            }
-          } catch (err) {
-            console.error("Error loading session addresses:", err);
-          }
-        };
-        const switchToSession = async (sessionNumber) => {
-          try {
-            const response = await chrome.runtime.sendMessage({
-              type: "switchToSession",
-              sessionNumber
-            });
-            if (response && !response.error) {
-              await loadExistingWallet();
-              await loadSessionAddresses();
-              setShowSessionList(false);
-            }
-          } catch (err) {
-            console.error("Error switching session:", err);
-          }
-        };
-        const openEtherscan = (address) => {
-          const etherscanUrl = `https://sepolia.etherscan.io/address/${address}`;
-          chrome.tabs.create({ url: etherscanUrl });
-        };
-        const loadExistingWallet = async () => {
-          try {
-            const response = await chrome.runtime.sendMessage({ type: "getWalletInfo" });
-            if (response && !response.error) {
-              setWalletInfo(response);
-              loadMasterBalance();
-            }
-            await loadPendingTransactions();
-          } catch (err) {
-            console.error("Error loading wallet:", err);
-          }
-        };
-        const loadPendingTransactions = async () => {
-          try {
-            const response = await chrome.runtime.sendMessage({ type: "getPendingTransactions" });
-            if (response && Array.isArray(response)) {
-              setPendingTransactions(response);
-            }
-          } catch (err) {
-            console.error("Error loading pending transactions:", err);
-          }
-        };
-        const approveTransaction = async (txId) => {
-          try {
-            console.log("\u{1F680} Popup: Approving transaction:", txId);
-            const response = await chrome.runtime.sendMessage({ type: "approveTransaction", txId });
-            console.log("\u{1F4E8} Popup: Response from background:", response);
-            await loadPendingTransactions();
-          } catch (err) {
-            console.error("Error approving transaction:", err);
-          }
-        };
-        const rejectTransaction = async (txId) => {
-          try {
-            await chrome.runtime.sendMessage({ type: "rejectTransaction", txId });
-            await loadPendingTransactions();
-          } catch (err) {
-            console.error("Error rejecting transaction:", err);
-          }
-        };
-        const importWallet = async () => {
-          if (!mnemonic.trim()) {
-            setError("Please enter a seed phrase");
-            return;
-          }
-          setIsImporting(true);
+        }
+        await loadPendingTransactions();
+      } catch (err) {
+        console.error("Error loading wallet:", err);
+      }
+    };
+    const loadPendingTransactions = async () => {
+      try {
+        const response = await chrome.runtime.sendMessage({ type: "getPendingTransactions" });
+        if (response && Array.isArray(response)) {
+          setPendingTransactions(response);
+        }
+      } catch (err) {
+        console.error("Error loading pending transactions:", err);
+      }
+    };
+    const approveTransaction = async (txId) => {
+      try {
+        console.log("\u{1F680} Popup: Approving transaction:", txId);
+        const response = await chrome.runtime.sendMessage({ type: "approveTransaction", txId });
+        console.log("\u{1F4E8} Popup: Response from background:", response);
+        await loadPendingTransactions();
+      } catch (err) {
+        console.error("Error approving transaction:", err);
+      }
+    };
+    const rejectTransaction = async (txId) => {
+      try {
+        await chrome.runtime.sendMessage({ type: "rejectTransaction", txId });
+        await loadPendingTransactions();
+      } catch (err) {
+        console.error("Error rejecting transaction:", err);
+      }
+    };
+    const importWallet = async () => {
+      if (!mnemonic.trim()) {
+        setError("Please enter a seed phrase");
+        return;
+      }
+      setIsImporting(true);
+      setError("");
+      try {
+        const response = await chrome.runtime.sendMessage({
+          type: "importWallet",
+          seedPhrase: mnemonic.trim()
+        });
+        if (response.error) {
+          setError(response.error);
+        } else {
+          setWalletInfo({
+            masterAddress: response.masterAddress,
+            currentSessionAddress: null,
+            sessionCount: 0
+          });
+          setMnemonic("");
           setError("");
-          try {
-            const response = await chrome.runtime.sendMessage({
-              type: "importWallet",
-              seedPhrase: mnemonic.trim()
-            });
-            if (response.error) {
-              setError(response.error);
-            } else {
-              setWalletInfo({
-                masterAddress: response.masterAddress,
-                currentSessionAddress: null,
-                sessionCount: 0
-              });
-              setMnemonic("");
-              setError("");
-              const masterBalanceResponse = await chrome.runtime.sendMessage({ type: "getMasterBalance" });
-              const poolBalanceResponse = await chrome.runtime.sendMessage({ type: "getPoolBalance" });
-              if (masterBalanceResponse && !masterBalanceResponse.error) {
-                setMasterBalance(masterBalanceResponse.balance);
-              }
-              if (poolBalanceResponse && !poolBalanceResponse.error) {
-                setPoolBalance(poolBalanceResponse.balance);
-              }
-              const poolBalanceNum = parseFloat(poolBalanceResponse?.balance || "0");
-              const masterBalanceNum = parseFloat(masterBalanceResponse?.balance || "0");
-              if (poolBalanceNum === 0 && masterBalanceNum > 0) {
-                setShowDepositSuggestion(true);
-              }
-            }
-          } catch (err) {
-            setError("Invalid seed phrase");
-          } finally {
-            setIsImporting(false);
+          const masterBalanceResponse = await chrome.runtime.sendMessage({ type: "getMasterBalance" });
+          const poolBalanceResponse = await chrome.runtime.sendMessage({ type: "getPoolBalance" });
+          if (masterBalanceResponse && !masterBalanceResponse.error) {
+            setMasterBalance(masterBalanceResponse.balance);
           }
-        };
-        const clearWallet = async () => {
-          try {
-            await chrome.storage.local.remove(["seedPhrase", "sessionCounter"]);
-            setWalletInfo(null);
-            setMnemonic("");
-            setError("");
-          } catch (err) {
-            console.error("Error clearing wallet:", err);
+          if (poolBalanceResponse && !poolBalanceResponse.error) {
+            setPoolBalance(poolBalanceResponse.balance);
           }
-        };
-        return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { style: {
-          padding: "20px",
-          width: "350px",
-          minHeight: "400px",
-          fontFamily: "Arial, sans-serif",
-          backgroundColor: "white"
-        }, children: [
-          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("h2", { style: { margin: "0 0 20px 0", color: "#333", textAlign: "center" }, children: "Welcome to PrivacyLinks" }),
-          !walletInfo ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [
-            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { style: { marginBottom: "15px" }, children: [
-              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", { style: { display: "flex", alignItems: "center", gap: "6px", marginBottom: "5px", color: "#666" }, children: [
-                "Enter 12-word PrivacyPools secret:",
-                /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
-                  "span",
-                  {
-                    title: "For the demo, use a 12-word seed phrase with testnet funds",
-                    style: {
-                      display: "inline-block",
-                      width: "16px",
-                      height: "16px",
-                      backgroundColor: "#007bff",
-                      color: "white",
-                      borderRadius: "50%",
-                      fontSize: "11px",
-                      fontWeight: "bold",
-                      textAlign: "center",
-                      lineHeight: "16px",
-                      cursor: "help",
-                      userSelect: "none"
-                    },
-                    children: "?"
-                  }
-                )
-              ] }),
+          const poolBalanceNum = parseFloat(poolBalanceResponse?.balance || "0");
+          const masterBalanceNum = parseFloat(masterBalanceResponse?.balance || "0");
+          if (poolBalanceNum === 0 && masterBalanceNum > 0) {
+            setShowDepositSuggestion(true);
+          }
+        }
+      } catch (err) {
+        setError("Invalid seed phrase");
+      } finally {
+        setIsImporting(false);
+      }
+    };
+    const clearWallet = async () => {
+      try {
+        await chrome.storage.local.remove(["seedPhrase", "sessionCounter"]);
+        setWalletInfo(null);
+        setMnemonic("");
+        setError("");
+        const masterBalanceResponse = await chrome.runtime.sendMessage({ type: "getMasterBalance" });
+        const poolBalanceResponse = await chrome.runtime.sendMessage({ type: "getPoolBalance" });
+        if (masterBalanceResponse && !masterBalanceResponse.error) {
+          setMasterBalance(masterBalanceResponse.balance);
+        }
+        if (poolBalanceResponse && !poolBalanceResponse.error) {
+          setPoolBalance(poolBalanceResponse.balance);
+        }
+        const poolBalanceNum = parseFloat(poolBalanceResponse?.balance || "0");
+        const masterBalanceNum = parseFloat(masterBalanceResponse?.balance || "0");
+        if (poolBalanceNum === 0 && masterBalanceNum > 0) {
+          setShowDepositSuggestion(true);
+        }
+      } catch (err) {
+        console.error("Error clearing wallet:", err);
+      }
+    };
+    const renderLoadingSpinner = () => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { style: {
+      display: "flex",
+      justifyContent: "center",
+      marginTop: "20px",
+      marginBottom: "20px"
+    }, children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { style: {
+      width: "40px",
+      height: "40px",
+      borderRadius: "50%",
+      border: "4px solid transparent",
+      borderTopColor: "#FF6600",
+      borderBottomColor: "#FFFFFF",
+      animation: "spin 1.5s linear infinite",
+      boxShadow: "0 0 15px rgba(255, 102, 0, 0.5)"
+    } }) });
+    return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { style: {
+      width: "360px",
+      minHeight: "500px",
+      padding: "20px",
+      boxSizing: "border-box",
+      fontFamily: "'Roboto', 'Arial', sans-serif",
+      backgroundColor: "#101010",
+      color: "#FFFFFF",
+      position: "relative",
+      overflow: "hidden",
+      borderRadius: "8px",
+      borderLeft: "4px solid #FF6600"
+    }, children: [
+      /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { style: {
+        position: "absolute",
+        top: 0,
+        right: 0,
+        width: "100%",
+        height: "4px",
+        background: "linear-gradient(90deg, #FF6600 0%, #FF8C00 100%)",
+        zIndex: 1
+      } }),
+      /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { style: {
+        position: "absolute",
+        bottom: "10%",
+        left: "0",
+        width: "100%",
+        height: "1px",
+        background: "linear-gradient(90deg, transparent, rgba(6, 214, 160, 0.4), transparent)",
+        zIndex: 0
+      } }),
+      /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { style: {
+        position: "absolute",
+        top: "10%",
+        left: "0",
+        width: "100%",
+        height: "1px",
+        background: "linear-gradient(90deg, transparent, rgba(6, 214, 160, 0.4), transparent)",
+        zIndex: 0
+      } }),
+      /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { style: {
+        position: "absolute",
+        bottom: "10%",
+        left: "0",
+        width: "100%",
+        height: "1px",
+        background: "linear-gradient(90deg, transparent, rgba(17, 138, 178, 0.4), transparent)",
+        zIndex: 0
+      } }),
+      /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { style: {
+        position: "relative",
+        zIndex: 1
+      }, children: [
+        /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h2", { style: { margin: "0 0 20px 0", color: "#FFFFFF", textAlign: "center", fontFamily: "'Roboto', 'Arial', sans-serif", fontWeight: "bold", textShadow: "0 1px 2px rgba(0, 0, 0, 0.5)" }, children: [
+          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { style: { color: "#FF6600" }, children: "Hash" }),
+          "ield"
+        ] }),
+        !walletInfo ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [
+          /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { style: { marginBottom: "15px" }, children: [
+            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", { style: { display: "flex", alignItems: "center", gap: "6px", marginBottom: "5px", color: "#FFFFFF", fontWeight: "bold" }, children: [
+              "Enter 12-word Hashield secret:",
               /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
-                "textarea",
+                "span",
                 {
-                  rows: 3,
-                  value: mnemonic,
-                  onChange: (e) => setMnemonic(e.target.value),
-                  placeholder: "word1 word2 word3 ...",
+                  title: "For the demo, use a 12-word seed phrase with testnet funds",
                   style: {
-                    width: "100%",
-                    padding: "8px",
-                    border: "1px solid #ddd",
-                    borderRadius: "4px",
-                    fontSize: "14px",
-                    resize: "vertical"
-                  }
+                    display: "inline-block",
+                    width: "16px",
+                    height: "16px",
+                    backgroundColor: "#FF6600",
+                    color: "white",
+                    borderRadius: "50%",
+                    fontSize: "11px",
+                    fontWeight: "bold",
+                    textAlign: "center",
+                    lineHeight: "16px",
+                    cursor: "help",
+                    userSelect: "none"
+                  },
+                  children: "?"
                 }
               )
             ] }),
-            error && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { style: {
-              color: "red",
-              fontSize: "12px",
-              marginBottom: "10px",
-              padding: "8px",
-              backgroundColor: "#ffebee",
-              border: "1px solid #ffcdd2",
-              borderRadius: "4px"
-            }, children: error }),
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
-              "button",
+              "textarea",
               {
-                onClick: importWallet,
-                disabled: isImporting || !mnemonic.trim(),
+                rows: 3,
+                value: mnemonic,
+                onChange: (e) => setMnemonic(e.target.value),
+                placeholder: "word1 word2 word3 ...",
                 style: {
                   width: "100%",
-                  padding: "10px",
-                  backgroundColor: isImporting ? "#ccc" : "#007bff",
-                  color: "white",
-                  border: "none",
+                  padding: "8px",
+                  border: "1px solid #ddd",
                   borderRadius: "4px",
-                  cursor: isImporting ? "not-allowed" : "pointer",
-                  fontSize: "14px"
-                },
-                children: isImporting ? "Importing..." : "Import Secret"
+                  fontSize: "14px",
+                  resize: "vertical"
+                }
               }
             )
-          ] }) : /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [
-            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { style: {
-              marginBottom: "20px",
-              padding: "15px",
-              backgroundColor: "#f8f9fa",
-              border: "1px solid #e9ecef",
-              borderRadius: "4px"
-            }, children: [
-              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("h3", { style: { margin: "0 0 15px 0", color: "#333" }, children: "PrivacyLinks Wallet" }),
-              walletInfo.currentSessionAddress && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { style: { marginBottom: "15px" }, children: [
-                /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { style: { display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "5px" }, children: [
-                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("strong", { style: { color: "#28a745" }, children: "Current Session Address:" }),
-                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
-                    "span",
-                    {
-                      onClick: () => {
-                        setShowSessionList(!showSessionList);
-                        if (!showSessionList) {
-                          loadSessionAddresses();
-                        }
-                      },
-                      style: {
-                        fontSize: "11px",
-                        color: "#6c757d",
-                        cursor: "pointer",
-                        textDecoration: "underline",
-                        opacity: 0.8,
-                        transition: "opacity 0.2s, color 0.2s"
-                      },
-                      onMouseEnter: (e) => {
-                        e.currentTarget.style.opacity = "1";
-                        e.currentTarget.style.color = "#495057";
-                      },
-                      onMouseLeave: (e) => {
-                        e.currentTarget.style.opacity = "0.8";
-                        e.currentTarget.style.color = "#6c757d";
-                      },
-                      children: showSessionList ? "\u25B3 hide" : "\u25BD show all"
-                    }
-                  )
-                ] }),
+          ] }),
+          error && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { style: {
+            color: "red",
+            fontSize: "12px",
+            marginBottom: "10px",
+            padding: "8px",
+            backgroundColor: "#ffebee",
+            border: "1px solid #ffcdd2",
+            borderRadius: "4px"
+          }, children: error }),
+          /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
+            "button",
+            {
+              onClick: importWallet,
+              disabled: isImporting || !mnemonic.trim(),
+              style: {
+                width: "100%",
+                padding: "10px",
+                backgroundColor: isImporting ? "#333333" : "#FF6600",
+                color: "white",
+                border: "none",
+                borderRadius: "4px",
+                cursor: isImporting ? "not-allowed" : "pointer",
+                fontSize: "14px",
+                fontWeight: "bold",
+                boxShadow: "0 2px 4px rgba(0, 0, 0, 0.2)",
+                transition: "all 0.2s ease"
+              },
+              children: isImporting ? "Importing..." : "Import Secret"
+            }
+          )
+        ] }) : /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [
+          /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { style: {
+            marginBottom: "20px",
+            padding: "15px",
+            backgroundColor: "#f8f9fa",
+            border: "1px solid #e9ecef",
+            borderRadius: "4px"
+          }, children: [
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("h3", { style: { margin: "0 0 15px 0", color: "#333" }, children: "Hashield Wallet" }),
+            walletInfo.currentSessionAddress && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { style: { marginBottom: "15px" }, children: [
+              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { style: { display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "5px" }, children: [
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("strong", { style: { color: "#28a745" }, children: "Current Session Address:" }),
                 /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
-                  "div",
+                  "span",
                   {
                     onClick: () => {
                       setShowSessionList(!showSessionList);
@@ -55245,889 +55288,960 @@ ${prettyStateOverride(stateOverride)}`;
                       }
                     },
                     style: {
-                      marginTop: "5px",
-                      wordBreak: "break-all",
                       fontSize: "11px",
-                      fontFamily: "monospace",
-                      color: "#155724",
-                      backgroundColor: "#d4edda",
-                      padding: "6px",
-                      borderRadius: "3px",
+                      color: "#6c757d",
                       cursor: "pointer",
-                      transition: "background-color 0.2s",
-                      border: "1px solid transparent"
+                      textDecoration: "underline",
+                      opacity: 0.8,
+                      transition: "opacity 0.2s, color 0.2s"
                     },
                     onMouseEnter: (e) => {
-                      e.currentTarget.style.backgroundColor = "#c3e6cb";
-                      e.currentTarget.style.borderColor = "#b1dfbb";
+                      e.currentTarget.style.opacity = "1";
+                      e.currentTarget.style.color = "#495057";
                     },
                     onMouseLeave: (e) => {
-                      e.currentTarget.style.backgroundColor = "#d4edda";
-                      e.currentTarget.style.borderColor = "transparent";
+                      e.currentTarget.style.opacity = "0.8";
+                      e.currentTarget.style.color = "#6c757d";
                     },
-                    title: "Click to toggle session list",
-                    children: walletInfo.currentSessionAddress
+                    children: showSessionList ? "\u25B3 hide" : "\u25BD show all"
                   }
-                ),
-                showSessionList && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { style: {
-                  marginTop: "10px",
-                  maxHeight: "200px",
-                  overflowY: "auto",
-                  border: "1px solid #dee2e6",
-                  borderRadius: "4px",
-                  backgroundColor: "#f8f9fa"
-                }, children: [
-                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { style: {
-                    padding: "8px",
-                    fontSize: "12px",
-                    fontWeight: "bold",
-                    borderBottom: "1px solid #dee2e6",
-                    backgroundColor: "#e9ecef"
-                  }, children: "Previous Sessions" }),
-                  sessionAddresses.length > 0 ? sessionAddresses.map((session) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(
-                    "div",
-                    {
-                      onClick: () => {
-                        if (!session.isCurrent) {
-                          switchToSession(session.sessionNumber);
-                        }
-                      },
-                      style: {
-                        padding: "8px",
-                        borderBottom: "1px solid #dee2e6",
-                        backgroundColor: session.isCurrent ? "#d4edda" : "transparent",
-                        transition: "background-color 0.2s",
-                        cursor: session.isCurrent ? "default" : "pointer"
-                      },
-                      onMouseEnter: (e) => {
-                        if (!session.isCurrent) {
-                          e.currentTarget.style.backgroundColor = "#e9ecef";
-                        }
-                      },
-                      onMouseLeave: (e) => {
-                        if (!session.isCurrent) {
-                          e.currentTarget.style.backgroundColor = "transparent";
-                        }
-                      },
-                      children: [
-                        /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { style: {
-                          fontSize: "11px",
-                          color: "#6c757d",
-                          marginBottom: "2px",
-                          display: "flex",
-                          justifyContent: "space-between",
-                          alignItems: "center"
-                        }, children: [
-                          /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { children: [
-                            "Session #",
-                            session.sessionNumber,
-                            " ",
-                            session.isCurrent && "(Current)"
-                          ] }),
-                          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { style: { display: "flex", gap: "8px" }, children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
-                            "span",
-                            {
-                              onClick: (e) => {
-                                e.stopPropagation();
-                                openEtherscan(session.address);
-                              },
-                              style: {
-                                cursor: "pointer",
-                                color: "#007bff",
-                                fontSize: "10px",
-                                textDecoration: "underline"
-                              },
-                              title: "View on Etherscan",
-                              children: "\u{1F50E}"
-                            }
-                          ) })
-                        ] }),
-                        /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
-                          "div",
-                          {
-                            style: {
-                              fontSize: "10px",
-                              fontFamily: "monospace",
-                              wordBreak: "break-all",
-                              color: "#495057",
-                              padding: "2px",
-                              borderRadius: "2px"
-                            },
-                            title: session.isCurrent ? "Current session" : "Click to switch to this session",
-                            children: session.address
-                          }
-                        )
-                      ]
+                )
+              ] }),
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
+                "div",
+                {
+                  onClick: () => {
+                    setShowSessionList(!showSessionList);
+                    if (!showSessionList) {
+                      loadSessionAddresses();
+                    }
+                  },
+                  style: {
+                    marginTop: "5px",
+                    wordBreak: "break-all",
+                    fontSize: "11px",
+                    fontFamily: "monospace",
+                    color: "#155724",
+                    backgroundColor: "#d4edda",
+                    padding: "6px",
+                    borderRadius: "3px",
+                    cursor: "pointer",
+                    transition: "background-color 0.2s",
+                    border: "1px solid transparent"
+                  },
+                  onMouseEnter: (e) => {
+                    e.currentTarget.style.backgroundColor = "#c3e6cb";
+                    e.currentTarget.style.borderColor = "#b1dfbb";
+                  },
+                  onMouseLeave: (e) => {
+                    e.currentTarget.style.backgroundColor = "#d4edda";
+                    e.currentTarget.style.borderColor = "transparent";
+                  },
+                  title: "Click to toggle session list",
+                  children: walletInfo.currentSessionAddress
+                }
+              ),
+              showSessionList && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { style: {
+                marginTop: "10px",
+                maxHeight: "200px",
+                overflowY: "auto",
+                border: "1px solid #dee2e6",
+                borderRadius: "4px",
+                backgroundColor: "#f8f9fa"
+              }, children: [
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { style: {
+                  padding: "8px",
+                  fontSize: "12px",
+                  fontWeight: "bold",
+                  borderBottom: "1px solid #dee2e6",
+                  backgroundColor: "#e9ecef"
+                }, children: "Previous Sessions" }),
+                sessionAddresses.length > 0 ? sessionAddresses.map((session) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(
+                  "div",
+                  {
+                    onClick: () => {
+                      if (!session.isCurrent) {
+                        switchToSession(session.sessionNumber);
+                      }
                     },
-                    session.sessionNumber
-                  )) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { style: { padding: "12px", fontSize: "11px", color: "#6c757d", textAlign: "center" }, children: "No previous sessions found" })
-                ] })
-              ] }),
-              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { style: { fontSize: "12px", color: "#6c757d" }, children: [
-                "Sessions Generated: ",
-                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("strong", { children: walletInfo.sessionCount })
-              ] }),
-              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { style: { fontSize: "12px", color: "#6c757d", marginTop: "5px" }, children: [
-                "Pool Balance: ",
-                /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("strong", { style: { color: "#007bff" }, children: [
-                  poolBalance,
-                  " ETH"
-                ] })
+                    style: {
+                      padding: "8px",
+                      borderBottom: "1px solid #dee2e6",
+                      backgroundColor: session.isCurrent ? "#d4edda" : "transparent",
+                      transition: "background-color 0.2s",
+                      cursor: session.isCurrent ? "default" : "pointer"
+                    },
+                    onMouseEnter: (e) => {
+                      if (!session.isCurrent) {
+                        e.currentTarget.style.backgroundColor = "#e9ecef";
+                      }
+                    },
+                    onMouseLeave: (e) => {
+                      if (!session.isCurrent) {
+                        e.currentTarget.style.backgroundColor = "transparent";
+                      }
+                    },
+                    children: [
+                      /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { style: {
+                        fontSize: "11px",
+                        color: "#6c757d",
+                        marginBottom: "2px",
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center"
+                      }, children: [
+                        /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { children: [
+                          "Session #",
+                          session.sessionNumber,
+                          " ",
+                          session.isCurrent && "(Current)"
+                        ] }),
+                        /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { style: { display: "flex", gap: "8px" }, children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
+                          "span",
+                          {
+                            onClick: (e) => {
+                              e.stopPropagation();
+                              openEtherscan(session.address);
+                            },
+                            style: {
+                              cursor: "pointer",
+                              color: "#007bff",
+                              fontSize: "10px",
+                              textDecoration: "underline"
+                            },
+                            title: "View on Etherscan",
+                            children: "\u{1F50E}"
+                          }
+                        ) })
+                      ] }),
+                      /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
+                        "div",
+                        {
+                          style: {
+                            fontSize: "10px",
+                            fontFamily: "monospace",
+                            wordBreak: "break-all",
+                            color: "#495057",
+                            padding: "2px",
+                            borderRadius: "2px"
+                          },
+                          title: session.isCurrent ? "Current session" : "Click to switch to this session",
+                          children: session.address
+                        }
+                      )
+                    ]
+                  },
+                  session.sessionNumber
+                )) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { style: { padding: "12px", fontSize: "11px", color: "#6c757d", textAlign: "center" }, children: "No previous sessions found" })
               ] })
             ] }),
-            showDepositSuggestion && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { style: {
-              marginBottom: "20px",
-              padding: "15px",
-              backgroundColor: "#e7f3ff",
-              border: "2px solid #007bff",
-              borderRadius: "8px"
+            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { style: { fontSize: "12px", color: "#6c757d" }, children: [
+              "Sessions Generated: ",
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("strong", { children: walletInfo.sessionCount })
+            ] }),
+            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { style: { fontSize: "12px", color: "#6c757d", marginTop: "5px" }, children: [
+              "Pool Balance: ",
+              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("strong", { style: { color: "#007bff" }, children: [
+                poolBalance,
+                " ETH"
+              ] })
+            ] })
+          ] }),
+          showDepositSuggestion && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { style: {
+            marginBottom: "20px",
+            padding: "15px",
+            backgroundColor: "#e7f3ff",
+            border: "2px solid #007bff",
+            borderRadius: "8px"
+          }, children: [
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("h4", { style: { margin: "0 0 10px 0", color: "#0056b3", fontSize: "14px" }, children: "\u{1F4B0} Deposit Suggestion" }),
+            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", { style: { fontSize: "12px", color: "#0056b3", margin: "0 0 15px 0" }, children: [
+              "To enable secure transactions, consider depositing some of your balance (",
+              (parseFloat(masterBalance) * 0.5).toFixed(4),
+              " ETH) to the Pool contract."
+            ] }),
+            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { style: { display: "flex", gap: "8px" }, children: [
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
+                "button",
+                {
+                  onClick: () => setShowDepositSuggestion(false),
+                  style: {
+                    flex: 1,
+                    padding: "8px 12px",
+                    backgroundColor: "#6c757d",
+                    color: "white",
+                    border: "none",
+                    borderRadius: "4px",
+                    cursor: "pointer",
+                    fontSize: "12px"
+                  },
+                  children: "Maybe Later"
+                }
+              ),
+              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(
+                "button",
+                {
+                  onClick: async () => {
+                    try {
+                      const depositAmount = (parseFloat(masterBalance) * 0.5).toFixed(4);
+                      await depositToPool(depositAmount);
+                    } catch (error2) {
+                      console.error("Deposit failed:", error2);
+                      setError("Deposit failed. Please try again.");
+                    }
+                  },
+                  style: {
+                    flex: 2,
+                    padding: "8px 12px",
+                    backgroundColor: "#007bff",
+                    color: "white",
+                    border: "none",
+                    borderRadius: "4px",
+                    cursor: "pointer",
+                    fontSize: "12px",
+                    fontWeight: "600"
+                  },
+                  children: [
+                    "Deposit (",
+                    (parseFloat(masterBalance) * 0.5).toFixed(4),
+                    " ETH)"
+                  ]
+                }
+              )
+            ] })
+          ] }),
+          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { style: {
+            marginBottom: "20px",
+            textAlign: "center"
+          }, children: !showPayUSDC ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(
+            "button",
+            {
+              onClick: () => setShowPayUSDC(true),
+              style: {
+                padding: "12px 24px",
+                backgroundColor: "#2775ca",
+                color: "white",
+                border: "none",
+                borderRadius: "8px",
+                cursor: "pointer",
+                fontSize: "14px",
+                fontWeight: "600",
+                display: "flex",
+                alignItems: "center",
+                gap: "8px",
+                margin: "0 auto",
+                boxShadow: "0 2px 8px rgba(39, 117, 202, 0.3)",
+                transition: "all 0.2s ease"
+              },
+              onMouseEnter: (e) => {
+                e.currentTarget.style.backgroundColor = "#1e5a96";
+                e.currentTarget.style.transform = "translateY(-1px)";
+                e.currentTarget.style.boxShadow = "0 4px 12px rgba(39, 117, 202, 0.4)";
+              },
+              onMouseLeave: (e) => {
+                e.currentTarget.style.backgroundColor = "#2775ca";
+                e.currentTarget.style.transform = "translateY(0px)";
+                e.currentTarget.style.boxShadow = "0 2px 8px rgba(39, 117, 202, 0.3)";
+              },
+              children: [
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
+                  "img",
+                  {
+                    src: "usdc-logo.png",
+                    alt: "USDC",
+                    style: {
+                      width: "20px",
+                      height: "20px",
+                      borderRadius: "50%"
+                    }
+                  }
+                ),
+                "Pay"
+              ]
+            }
+          ) : /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { style: {
+            padding: "20px",
+            backgroundColor: "#f8f9fa",
+            border: "1px solid #e9ecef",
+            borderRadius: "8px",
+            textAlign: "left"
+          }, children: [
+            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { style: {
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              marginBottom: "15px"
             }, children: [
-              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("h4", { style: { margin: "0 0 10px 0", color: "#0056b3", fontSize: "14px" }, children: "\u{1F4B0} Deposit Suggestion" }),
-              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", { style: { fontSize: "12px", color: "#0056b3", margin: "0 0 15px 0" }, children: [
-                "To enable secure transactions, consider depositing some of your balance (",
-                (parseFloat(masterBalance) * 0.5).toFixed(4),
-                " ETH) to the Pool contract."
+              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h4", { style: {
+                margin: 0,
+                color: "#333",
+                fontSize: "14px",
+                display: "flex",
+                alignItems: "center",
+                gap: "6px"
+              }, children: [
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
+                  "img",
+                  {
+                    src: "usdc-logo.png",
+                    alt: "USDC",
+                    style: {
+                      width: "16px",
+                      height: "16px",
+                      borderRadius: "50%"
+                    }
+                  }
+                ),
+                "Pay"
+              ] }),
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
+                "span",
+                {
+                  onClick: () => setShowPayUSDC(false),
+                  style: {
+                    cursor: "pointer",
+                    color: "#6c757d",
+                    fontSize: "18px",
+                    lineHeight: "1"
+                  },
+                  children: "\xD7"
+                }
+              )
+            ] }),
+            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { style: { marginBottom: "12px" }, children: [
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { style: {
+                display: "block",
+                marginBottom: "4px",
+                fontSize: "12px",
+                color: "#666",
+                fontWeight: "500"
+              }, children: "Token Type" }),
+              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(
+                "select",
+                {
+                  value: paymentForm.tokenType,
+                  onChange: (e) => setPaymentForm({
+                    ...paymentForm,
+                    tokenType: e.target.value
+                  }),
+                  style: {
+                    width: "100%",
+                    padding: "8px 10px",
+                    border: "1px solid #ddd",
+                    borderRadius: "4px",
+                    fontSize: "12px",
+                    backgroundColor: "white",
+                    boxSizing: "border-box"
+                  },
+                  children: [
+                    /* @__PURE__ */ (0, import_jsx_runtime.jsx)("option", { value: "USDC", children: "USDC" }),
+                    /* @__PURE__ */ (0, import_jsx_runtime.jsx)("option", { value: "CCIP-BnM", children: "CCIP-BnM (Test Token)" })
+                  ]
+                }
+              )
+            ] }),
+            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { style: { marginBottom: "12px" }, children: [
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { style: {
+                display: "block",
+                marginBottom: "4px",
+                fontSize: "12px",
+                color: "#666",
+                fontWeight: "500"
+              }, children: "Destination Address" }),
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
+                "input",
+                {
+                  type: "text",
+                  value: paymentForm.destinationAddress,
+                  onChange: (e) => setPaymentForm({
+                    ...paymentForm,
+                    destinationAddress: e.target.value
+                  }),
+                  placeholder: "0x1234...",
+                  style: {
+                    width: "100%",
+                    padding: "8px 10px",
+                    border: "1px solid #ddd",
+                    borderRadius: "4px",
+                    fontSize: "12px",
+                    fontFamily: "monospace",
+                    boxSizing: "border-box"
+                  }
+                }
+              )
+            ] }),
+            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { style: { marginBottom: "12px" }, children: [
+              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", { style: {
+                display: "block",
+                marginBottom: "4px",
+                fontSize: "12px",
+                color: "#666",
+                fontWeight: "500"
+              }, children: [
+                "Amount (",
+                paymentForm.tokenType,
+                ")"
+              ] }),
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
+                "input",
+                {
+                  type: "number",
+                  value: paymentForm.amount,
+                  onChange: (e) => setPaymentForm({
+                    ...paymentForm,
+                    amount: e.target.value
+                  }),
+                  placeholder: "0.00",
+                  step: "0.01",
+                  min: "0",
+                  style: {
+                    width: "100%",
+                    padding: "8px 10px",
+                    border: "1px solid #ddd",
+                    borderRadius: "4px",
+                    fontSize: "12px",
+                    boxSizing: "border-box"
+                  }
+                }
+              )
+            ] }),
+            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { style: { marginBottom: "15px" }, children: [
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { style: {
+                display: "block",
+                marginBottom: "4px",
+                fontSize: "12px",
+                color: "#666",
+                fontWeight: "500"
+              }, children: "Destination Chain" }),
+              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(
+                "select",
+                {
+                  value: paymentForm.destinationChain,
+                  onChange: (e) => setPaymentForm({
+                    ...paymentForm,
+                    destinationChain: parseInt(e.target.value)
+                  }),
+                  style: {
+                    width: "100%",
+                    padding: "8px 10px",
+                    border: "1px solid #ddd",
+                    borderRadius: "4px",
+                    fontSize: "12px",
+                    backgroundColor: "white",
+                    boxSizing: "border-box"
+                  },
+                  children: [
+                    /* @__PURE__ */ (0, import_jsx_runtime.jsx)("option", { value: 11155111 /* ETH_SEPOLIA */, children: "Ethereum Sepolia" }),
+                    /* @__PURE__ */ (0, import_jsx_runtime.jsx)("option", { value: 84532 /* BASE_SEPOLIA */, children: "Base Sepolia" }),
+                    /* @__PURE__ */ (0, import_jsx_runtime.jsx)("option", { value: 421614 /* ARB_SEPOLIA */, children: "Arbitrum Sepolia" }),
+                    /* @__PURE__ */ (0, import_jsx_runtime.jsx)("option", { value: 43113 /* AVAX_FUJI */, children: "Avalanche Fuji" }),
+                    /* @__PURE__ */ (0, import_jsx_runtime.jsx)("option", { value: 80002 /* POLYGON_AMOY */, children: "Polygon Amoy" }),
+                    /* @__PURE__ */ (0, import_jsx_runtime.jsx)("option", { value: 2021 /* RONIN_SAIGON */, children: "Ronin Saigon" })
+                  ]
+                }
+              )
+            ] }),
+            !showPaymentOverview ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
+              "button",
+              {
+                onClick: () => {
+                  setShowPaymentOverview(true);
+                },
+                disabled: !paymentForm.destinationAddress || !paymentForm.amount,
+                style: {
+                  width: "100%",
+                  padding: "10px",
+                  backgroundColor: !paymentForm.destinationAddress || !paymentForm.amount ? "#6c757d" : "#007bff",
+                  color: "white",
+                  border: "none",
+                  borderRadius: "4px",
+                  cursor: !paymentForm.destinationAddress || !paymentForm.amount ? "not-allowed" : "pointer",
+                  fontSize: "13px",
+                  fontWeight: "600"
+                },
+                onMouseEnter: (e) => {
+                  if (paymentForm.destinationAddress && paymentForm.amount) {
+                    e.currentTarget.style.backgroundColor = "#0056b3";
+                  }
+                },
+                onMouseLeave: (e) => {
+                  if (paymentForm.destinationAddress && paymentForm.amount) {
+                    e.currentTarget.style.backgroundColor = "#007bff";
+                  }
+                },
+                children: "Overview"
+              }
+            ) : /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [
+              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { style: {
+                backgroundColor: "#e7f3ff",
+                border: "1px solid #bee5eb",
+                borderRadius: "4px",
+                padding: "12px",
+                marginBottom: "12px"
+              }, children: [
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("h5", { style: { margin: "0 0 8px 0", fontSize: "12px", color: "#0c5460" }, children: "Payment Overview" }),
+                /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { style: { fontSize: "11px", marginBottom: "4px" }, children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { style: { color: "#6c757d" }, children: "To:" }),
+                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { style: {
+                    fontFamily: "monospace",
+                    wordBreak: "break-all",
+                    fontSize: "10px",
+                    marginTop: "2px"
+                  }, children: paymentForm.destinationAddress })
+                ] }),
+                /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { style: { fontSize: "11px", marginBottom: "4px" }, children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { style: { color: "#6c757d" }, children: "Amount:" }),
+                  /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { style: { marginLeft: "8px", fontWeight: "600" }, children: [
+                    paymentForm.amount,
+                    " ",
+                    paymentForm.tokenType
+                  ] })
+                ] }),
+                /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { style: { fontSize: "11px", marginBottom: "4px" }, children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { style: { color: "#6c757d" }, children: "Chain:" }),
+                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { style: { marginLeft: "8px" }, children: CCIP_CHAIN_ID_TO_NAME[paymentForm.destinationChain] || "Unknown Chain" })
+                ] }),
+                /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { style: { fontSize: "11px", marginBottom: "0" }, children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { style: { color: "#6c757d" }, children: "Estimated Cost:" }),
+                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { style: { marginLeft: "8px", fontWeight: "600", color: "#dc3545" }, children: "~0.0023 ETH" })
+                ] })
               ] }),
               /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { style: { display: "flex", gap: "8px" }, children: [
                 /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
                   "button",
                   {
-                    onClick: () => setShowDepositSuggestion(false),
+                    onClick: () => setShowPaymentOverview(false),
                     style: {
                       flex: 1,
-                      padding: "8px 12px",
+                      padding: "10px",
                       backgroundColor: "#6c757d",
+                      color: "white",
+                      border: "none",
+                      borderRadius: "4px",
+                      cursor: "pointer",
+                      fontSize: "13px",
+                      fontWeight: "600"
+                    },
+                    onMouseEnter: (e) => {
+                      e.currentTarget.style.backgroundColor = "#545b62";
+                    },
+                    onMouseLeave: (e) => {
+                      e.currentTarget.style.backgroundColor = "#6c757d";
+                    },
+                    children: "Back"
+                  }
+                ),
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
+                  "button",
+                  {
+                    onClick: async () => {
+                      if (!walletInfo?.currentSessionAddress) {
+                        console.error("No session address available");
+                        return;
+                      }
+                      try {
+                        const response = await chrome.runtime.sendMessage({ type: "getPrivateKey" });
+                        if (response.error) {
+                          console.error("Failed to get private key:", response.error);
+                          return;
+                        }
+                        const fundResponse = await chrome.runtime.sendMessage({
+                          type: "fundSessionIfNeeded",
+                          sessionAddress: walletInfo.currentSessionAddress,
+                          requiredAmount: "0.01"
+                          // 0.01 ETH
+                        });
+                        if (fundResponse.error) {
+                          console.error("Failed to fund session:", fundResponse.error);
+                        }
+                        await executeCCIPTransfer(
+                          response.privateKey,
+                          11155111 /* ETH_SEPOLIA */,
+                          // Source chain (assuming current session is on Sepolia)
+                          paymentForm.destinationChain,
+                          paymentForm.destinationAddress,
+                          paymentForm.amount,
+                          paymentForm.tokenType
+                        );
+                      } catch (error2) {
+                        console.error("Payment failed:", error2);
+                      }
+                    },
+                    disabled: currentStep !== "idle" && currentStep !== "completed" && currentStep !== "error",
+                    style: {
+                      flex: 1,
+                      padding: "10px",
+                      backgroundColor: currentStep !== "idle" && currentStep !== "completed" && currentStep !== "error" ? "#6c757d" : "#28a745",
+                      color: "white",
+                      border: "none",
+                      borderRadius: "4px",
+                      cursor: currentStep !== "idle" && currentStep !== "completed" && currentStep !== "error" ? "not-allowed" : "pointer",
+                      fontSize: "13px",
+                      fontWeight: "600"
+                    },
+                    onMouseEnter: (e) => {
+                      if (currentStep === "idle" || currentStep === "completed" || currentStep === "error") {
+                        e.currentTarget.style.backgroundColor = "#218838";
+                      }
+                    },
+                    onMouseLeave: (e) => {
+                      if (currentStep === "idle" || currentStep === "completed" || currentStep === "error") {
+                        e.currentTarget.style.backgroundColor = "#28a745";
+                      }
+                    },
+                    children: currentStep === "idle" ? "Confirm Payment" : currentStep === "completed" ? "Payment Complete" : currentStep === "error" ? "Retry Payment" : "Processing..."
+                  }
+                )
+              ] })
+            ] }),
+            (currentStep !== "idle" || logs.length > 0) && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { style: {
+              marginTop: "15px",
+              padding: "12px",
+              backgroundColor: currentStep === "error" ? "#f8d7da" : "#e7f3ff",
+              border: `1px solid ${currentStep === "error" ? "#f5c6cb" : "#bee5eb"}`,
+              borderRadius: "4px"
+            }, children: [
+              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h5", { style: {
+                margin: "0 0 8px 0",
+                fontSize: "12px",
+                color: currentStep === "error" ? "#721c24" : "#0c5460",
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center"
+              }, children: [
+                "Payment Status",
+                (currentStep === "completed" || currentStep === "error") && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
+                  "button",
+                  {
+                    onClick: () => {
+                      reset();
+                      setShowPaymentOverview(false);
+                    },
+                    style: {
+                      fontSize: "10px",
+                      padding: "2px 6px",
+                      backgroundColor: "#6c757d",
+                      color: "white",
+                      border: "none",
+                      borderRadius: "2px",
+                      cursor: "pointer"
+                    },
+                    children: "Clear"
+                  }
+                )
+              ] }),
+              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { style: {
+                fontSize: "11px",
+                color: currentStep === "error" ? "#721c24" : "#0c5460",
+                marginBottom: "8px",
+                fontWeight: "600"
+              }, children: [
+                "Current Step: ",
+                currentStep === "idle" ? "Ready" : currentStep === "approving-token" ? `Approving ${paymentForm.tokenType}` : currentStep === "estimating-fees" ? "Estimating CCIP Fees" : currentStep === "transferring" ? "Initiating CCIP Transfer" : currentStep === "waiting-confirmation" ? "Waiting for Confirmation" : currentStep === "completed" ? "\u2705 Completed" : currentStep === "error" ? "\u274C Error" : currentStep
+              ] }),
+              messageId && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { style: {
+                fontSize: "10px",
+                color: "#0c5460",
+                backgroundColor: "#e7f3ff",
+                border: "1px solid #bee5eb",
+                padding: "6px",
+                borderRadius: "3px",
+                marginBottom: "8px",
+                wordBreak: "break-all"
+              }, children: [
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("strong", { children: "CCIP Message ID:" }),
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("br", {}),
+                messageId,
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("br", {}),
+                /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("small", { children: [
+                  "Track on ",
+                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("a", { href: `https://ccip.chain.link/msg/${messageId}`, target: "_blank", rel: "noopener noreferrer", style: { color: "#007bff" }, children: "CCIP Explorer" })
+                ] })
+              ] }),
+              transferError && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { style: {
+                fontSize: "10px",
+                color: "#721c24",
+                backgroundColor: "#f8d7da",
+                border: "1px solid #f5c6cb",
+                padding: "6px",
+                borderRadius: "3px",
+                marginBottom: "8px"
+              }, children: [
+                "Error: ",
+                transferError
+              ] }),
+              logs.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { style: {
+                maxHeight: "120px",
+                overflowY: "auto",
+                fontSize: "9px",
+                fontFamily: "monospace",
+                backgroundColor: "rgba(255, 255, 255, 0.7)",
+                padding: "6px",
+                borderRadius: "3px",
+                border: "1px solid rgba(0, 0, 0, 0.1)"
+              }, children: logs.map((log, index2) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { style: { marginBottom: "2px", lineHeight: "1.2" }, children: log }, index2)) })
+            ] })
+          ] }) }),
+          transactionProgress && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { style: {
+            marginBottom: "20px",
+            padding: "15px",
+            backgroundColor: transactionProgress.status === "error" ? "#f8d7da" : transactionProgress.status === "completed" ? "#d4edda" : "#e7f3ff",
+            border: `2px solid ${transactionProgress.status === "error" ? "#dc3545" : transactionProgress.status === "completed" ? "#28a745" : "#007bff"}`,
+            borderRadius: "8px"
+          }, children: [
+            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h4", { style: {
+              margin: "0 0 10px 0",
+              color: transactionProgress.status === "error" ? "#721c24" : transactionProgress.status === "completed" ? "#155724" : "#0056b3",
+              fontSize: "14px",
+              display: "flex",
+              alignItems: "center",
+              gap: "8px"
+            }, children: [
+              transactionProgress.status === "processing" && "\u23F3",
+              transactionProgress.status === "completed" && "\u2705",
+              transactionProgress.status === "error" && "\u274C",
+              "Transaction Progress"
+            ] }),
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { style: {
+              width: "100%",
+              height: "8px",
+              backgroundColor: "#e9ecef",
+              borderRadius: "4px",
+              marginBottom: "10px",
+              overflow: "hidden"
+            }, children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { style: {
+              width: `${transactionProgress.currentStep / transactionProgress.totalSteps * 100}%`,
+              height: "100%",
+              backgroundColor: transactionProgress.status === "error" ? "#dc3545" : transactionProgress.status === "completed" ? "#28a745" : "#007bff",
+              transition: "width 0.3s ease"
+            } }) }),
+            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { style: { fontSize: "12px", marginBottom: "8px" }, children: [
+              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("strong", { children: [
+                "Step ",
+                transactionProgress.currentStep,
+                "/",
+                transactionProgress.totalSteps,
+                ":"
+              ] }),
+              " ",
+              transactionProgress.stepName
+            ] }),
+            transactionProgress.txHash && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { style: { fontSize: "11px", marginBottom: "8px" }, children: [
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("strong", { children: "Transaction:" }),
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { style: {
+                fontFamily: "monospace",
+                wordBreak: "break-all",
+                fontSize: "10px",
+                marginTop: "2px"
+              }, children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
+                "a",
+                {
+                  href: `https://sepolia.etherscan.io/tx/${transactionProgress.txHash}`,
+                  target: "_blank",
+                  rel: "noopener noreferrer",
+                  style: { color: "#007bff", textDecoration: "underline" },
+                  children: transactionProgress.txHash
+                }
+              ) })
+            ] }),
+            transactionProgress.error && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { style: {
+              fontSize: "11px",
+              color: "#721c24",
+              backgroundColor: "#f8d7da",
+              padding: "6px",
+              borderRadius: "3px",
+              border: "1px solid #f5c6cb"
+            }, children: [
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("strong", { children: "Error:" }),
+              " ",
+              transactionProgress.error
+            ] })
+          ] }),
+          pendingTransactions.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { style: {
+            marginBottom: "15px",
+            padding: "15px",
+            backgroundColor: "#fff3cd",
+            border: "2px solid #ff6b35",
+            borderRadius: "4px"
+          }, children: [
+            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h4", { style: { margin: "0 0 15px 0", color: "#d63384" }, children: [
+              "\u{1F525} Pending Transactions (",
+              pendingTransactions.length,
+              ")"
+            ] }),
+            pendingTransactions.map((tx) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { style: {
+              marginBottom: "15px",
+              padding: "12px",
+              backgroundColor: "#ffffff",
+              border: "1px solid #dee2e6",
+              borderRadius: "4px"
+            }, children: [
+              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { style: { marginBottom: "8px" }, children: [
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("strong", { children: "To:" }),
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { style: { fontSize: "11px", fontFamily: "monospace", wordBreak: "break-all" }, children: tx.txParams.to })
+              ] }),
+              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { style: { marginBottom: "8px" }, children: [
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("strong", { children: "Value:" }),
+                " ",
+                tx.txParams.value ? ethers_exports.formatEther(tx.txParams.value) + " ETH" : "0 ETH"
+              ] }),
+              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { style: { marginBottom: "12px", fontSize: "11px", color: "#6c757d" }, children: [
+                "Gas Limit: ",
+                tx.txParams.gasLimit || "Not set"
+              ] }),
+              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { style: { display: "flex", gap: "8px" }, children: [
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
+                  "button",
+                  {
+                    onClick: () => approveTransaction(tx.id),
+                    style: {
+                      flex: 1,
+                      padding: "8px",
+                      backgroundColor: "#28a745",
                       color: "white",
                       border: "none",
                       borderRadius: "4px",
                       cursor: "pointer",
                       fontSize: "12px"
                     },
-                    children: "Maybe Later"
+                    children: "\u2705 Approve"
                   }
                 ),
-                /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
                   "button",
                   {
-                    onClick: async () => {
-                      try {
-                        const depositAmount = (parseFloat(masterBalance) * 0.5).toFixed(4);
-                        await depositToPool(depositAmount);
-                      } catch (error2) {
-                        console.error("Deposit failed:", error2);
-                        setError("Deposit failed. Please try again.");
-                      }
-                    },
+                    onClick: () => rejectTransaction(tx.id),
                     style: {
-                      flex: 2,
-                      padding: "8px 12px",
-                      backgroundColor: "#007bff",
+                      flex: 1,
+                      padding: "8px",
+                      backgroundColor: "#dc3545",
                       color: "white",
                       border: "none",
                       borderRadius: "4px",
                       cursor: "pointer",
-                      fontSize: "12px",
-                      fontWeight: "600"
+                      fontSize: "12px"
                     },
-                    children: [
-                      "Deposit (",
-                      (parseFloat(masterBalance) * 0.5).toFixed(4),
-                      " ETH)"
-                    ]
+                    children: "\u274C Reject"
                   }
                 )
               ] })
-            ] }),
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { style: {
-              marginBottom: "20px",
-              textAlign: "center"
-            }, children: !showPayUSDC ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(
-              "button",
-              {
-                onClick: () => setShowPayUSDC(true),
-                style: {
-                  padding: "12px 24px",
-                  backgroundColor: "#2775ca",
-                  color: "white",
-                  border: "none",
-                  borderRadius: "8px",
-                  cursor: "pointer",
-                  fontSize: "14px",
-                  fontWeight: "600",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "8px",
-                  margin: "0 auto",
-                  boxShadow: "0 2px 8px rgba(39, 117, 202, 0.3)",
-                  transition: "all 0.2s ease"
-                },
-                onMouseEnter: (e) => {
-                  e.currentTarget.style.backgroundColor = "#1e5a96";
-                  e.currentTarget.style.transform = "translateY(-1px)";
-                  e.currentTarget.style.boxShadow = "0 4px 12px rgba(39, 117, 202, 0.4)";
-                },
-                onMouseLeave: (e) => {
-                  e.currentTarget.style.backgroundColor = "#2775ca";
-                  e.currentTarget.style.transform = "translateY(0px)";
-                  e.currentTarget.style.boxShadow = "0 2px 8px rgba(39, 117, 202, 0.3)";
-                },
-                children: [
-                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
-                    "img",
-                    {
-                      src: "usdc-logo.png",
-                      alt: "USDC",
-                      style: {
-                        width: "20px",
-                        height: "20px",
-                        borderRadius: "50%"
-                      }
-                    }
-                  ),
-                  "Pay"
-                ]
-              }
-            ) : /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { style: {
-              padding: "20px",
-              backgroundColor: "#f8f9fa",
-              border: "1px solid #e9ecef",
-              borderRadius: "8px",
-              textAlign: "left"
-            }, children: [
-              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { style: {
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                marginBottom: "15px"
-              }, children: [
-                /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h4", { style: {
-                  margin: 0,
-                  color: "#333",
-                  fontSize: "14px",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "6px"
-                }, children: [
-                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
-                    "img",
-                    {
-                      src: "usdc-logo.png",
-                      alt: "USDC",
-                      style: {
-                        width: "16px",
-                        height: "16px",
-                        borderRadius: "50%"
-                      }
-                    }
-                  ),
-                  "Pay"
-                ] }),
-                /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
-                  "span",
-                  {
-                    onClick: () => setShowPayUSDC(false),
-                    style: {
-                      cursor: "pointer",
-                      color: "#6c757d",
-                      fontSize: "18px",
-                      lineHeight: "1"
-                    },
-                    children: "\xD7"
-                  }
-                )
-              ] }),
-              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { style: { marginBottom: "12px" }, children: [
-                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { style: {
-                  display: "block",
-                  marginBottom: "4px",
-                  fontSize: "12px",
-                  color: "#666",
-                  fontWeight: "500"
-                }, children: "Token Type" }),
-                /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(
-                  "select",
-                  {
-                    value: paymentForm.tokenType,
-                    onChange: (e) => setPaymentForm({
-                      ...paymentForm,
-                      tokenType: e.target.value
-                    }),
-                    style: {
-                      width: "100%",
-                      padding: "8px 10px",
-                      border: "1px solid #ddd",
-                      borderRadius: "4px",
-                      fontSize: "12px",
-                      backgroundColor: "white",
-                      boxSizing: "border-box"
-                    },
-                    children: [
-                      /* @__PURE__ */ (0, import_jsx_runtime.jsx)("option", { value: "USDC", children: "USDC" }),
-                      /* @__PURE__ */ (0, import_jsx_runtime.jsx)("option", { value: "CCIP-BnM", children: "CCIP-BnM (Test Token)" })
-                    ]
-                  }
-                )
-              ] }),
-              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { style: { marginBottom: "12px" }, children: [
-                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { style: {
-                  display: "block",
-                  marginBottom: "4px",
-                  fontSize: "12px",
-                  color: "#666",
-                  fontWeight: "500"
-                }, children: "Destination Address" }),
-                /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
-                  "input",
-                  {
-                    type: "text",
-                    value: paymentForm.destinationAddress,
-                    onChange: (e) => setPaymentForm({
-                      ...paymentForm,
-                      destinationAddress: e.target.value
-                    }),
-                    placeholder: "0x1234...",
-                    style: {
-                      width: "100%",
-                      padding: "8px 10px",
-                      border: "1px solid #ddd",
-                      borderRadius: "4px",
-                      fontSize: "12px",
-                      fontFamily: "monospace",
-                      boxSizing: "border-box"
-                    }
-                  }
-                )
-              ] }),
-              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { style: { marginBottom: "12px" }, children: [
-                /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", { style: {
-                  display: "block",
-                  marginBottom: "4px",
-                  fontSize: "12px",
-                  color: "#666",
-                  fontWeight: "500"
-                }, children: [
-                  "Amount (",
-                  paymentForm.tokenType,
-                  ")"
-                ] }),
-                /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
-                  "input",
-                  {
-                    type: "number",
-                    value: paymentForm.amount,
-                    onChange: (e) => setPaymentForm({
-                      ...paymentForm,
-                      amount: e.target.value
-                    }),
-                    placeholder: "0.00",
-                    step: "0.01",
-                    min: "0",
-                    style: {
-                      width: "100%",
-                      padding: "8px 10px",
-                      border: "1px solid #ddd",
-                      borderRadius: "4px",
-                      fontSize: "12px",
-                      boxSizing: "border-box"
-                    }
-                  }
-                )
-              ] }),
-              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { style: { marginBottom: "15px" }, children: [
-                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { style: {
-                  display: "block",
-                  marginBottom: "4px",
-                  fontSize: "12px",
-                  color: "#666",
-                  fontWeight: "500"
-                }, children: "Destination Chain" }),
-                /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(
-                  "select",
-                  {
-                    value: paymentForm.destinationChain,
-                    onChange: (e) => setPaymentForm({
-                      ...paymentForm,
-                      destinationChain: parseInt(e.target.value)
-                    }),
-                    style: {
-                      width: "100%",
-                      padding: "8px 10px",
-                      border: "1px solid #ddd",
-                      borderRadius: "4px",
-                      fontSize: "12px",
-                      backgroundColor: "white",
-                      boxSizing: "border-box"
-                    },
-                    children: [
-                      /* @__PURE__ */ (0, import_jsx_runtime.jsx)("option", { value: 11155111 /* ETH_SEPOLIA */, children: "Ethereum Sepolia" }),
-                      /* @__PURE__ */ (0, import_jsx_runtime.jsx)("option", { value: 84532 /* BASE_SEPOLIA */, children: "Base Sepolia" }),
-                      /* @__PURE__ */ (0, import_jsx_runtime.jsx)("option", { value: 421614 /* ARB_SEPOLIA */, children: "Arbitrum Sepolia" }),
-                      /* @__PURE__ */ (0, import_jsx_runtime.jsx)("option", { value: 43113 /* AVAX_FUJI */, children: "Avalanche Fuji" }),
-                      /* @__PURE__ */ (0, import_jsx_runtime.jsx)("option", { value: 80002 /* POLYGON_AMOY */, children: "Polygon Amoy" }),
-                      /* @__PURE__ */ (0, import_jsx_runtime.jsx)("option", { value: 2021 /* RONIN_SAIGON */, children: "Ronin Saigon" })
-                    ]
-                  }
-                )
-              ] }),
-              !showPaymentOverview ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
-                "button",
-                {
-                  onClick: () => {
-                    setShowPaymentOverview(true);
-                  },
-                  disabled: !paymentForm.destinationAddress || !paymentForm.amount,
-                  style: {
-                    width: "100%",
-                    padding: "10px",
-                    backgroundColor: !paymentForm.destinationAddress || !paymentForm.amount ? "#6c757d" : "#007bff",
-                    color: "white",
-                    border: "none",
-                    borderRadius: "4px",
-                    cursor: !paymentForm.destinationAddress || !paymentForm.amount ? "not-allowed" : "pointer",
-                    fontSize: "13px",
-                    fontWeight: "600"
-                  },
-                  onMouseEnter: (e) => {
-                    if (paymentForm.destinationAddress && paymentForm.amount) {
-                      e.currentTarget.style.backgroundColor = "#0056b3";
-                    }
-                  },
-                  onMouseLeave: (e) => {
-                    if (paymentForm.destinationAddress && paymentForm.amount) {
-                      e.currentTarget.style.backgroundColor = "#007bff";
-                    }
-                  },
-                  children: "Overview"
-                }
-              ) : /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [
-                /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { style: {
-                  backgroundColor: "#e7f3ff",
-                  border: "1px solid #bee5eb",
-                  borderRadius: "4px",
-                  padding: "12px",
-                  marginBottom: "12px"
-                }, children: [
-                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("h5", { style: { margin: "0 0 8px 0", fontSize: "12px", color: "#0c5460" }, children: "Payment Overview" }),
-                  /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { style: { fontSize: "11px", marginBottom: "4px" }, children: [
-                    /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { style: { color: "#6c757d" }, children: "To:" }),
-                    /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { style: {
-                      fontFamily: "monospace",
-                      wordBreak: "break-all",
-                      fontSize: "10px",
-                      marginTop: "2px"
-                    }, children: paymentForm.destinationAddress })
-                  ] }),
-                  /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { style: { fontSize: "11px", marginBottom: "4px" }, children: [
-                    /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { style: { color: "#6c757d" }, children: "Amount:" }),
-                    /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { style: { marginLeft: "8px", fontWeight: "600" }, children: [
-                      paymentForm.amount,
-                      " ",
-                      paymentForm.tokenType
-                    ] })
-                  ] }),
-                  /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { style: { fontSize: "11px", marginBottom: "4px" }, children: [
-                    /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { style: { color: "#6c757d" }, children: "Chain:" }),
-                    /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { style: { marginLeft: "8px" }, children: CCIP_CHAIN_ID_TO_NAME[paymentForm.destinationChain] || "Unknown Chain" })
-                  ] }),
-                  /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { style: { fontSize: "11px", marginBottom: "0" }, children: [
-                    /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { style: { color: "#6c757d" }, children: "Estimated Cost:" }),
-                    /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { style: { marginLeft: "8px", fontWeight: "600", color: "#dc3545" }, children: "~0.0023 ETH" })
-                  ] })
-                ] }),
-                /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { style: { display: "flex", gap: "8px" }, children: [
-                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
-                    "button",
-                    {
-                      onClick: () => setShowPaymentOverview(false),
-                      style: {
-                        flex: 1,
-                        padding: "10px",
-                        backgroundColor: "#6c757d",
-                        color: "white",
-                        border: "none",
-                        borderRadius: "4px",
-                        cursor: "pointer",
-                        fontSize: "13px",
-                        fontWeight: "600"
-                      },
-                      onMouseEnter: (e) => {
-                        e.currentTarget.style.backgroundColor = "#545b62";
-                      },
-                      onMouseLeave: (e) => {
-                        e.currentTarget.style.backgroundColor = "#6c757d";
-                      },
-                      children: "Back"
-                    }
-                  ),
-                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
-                    "button",
-                    {
-                      onClick: async () => {
-                        if (!walletInfo?.currentSessionAddress) {
-                          console.error("No session address available");
-                          return;
-                        }
-                        try {
-                          const response = await chrome.runtime.sendMessage({ type: "getPrivateKey" });
-                          if (response.error) {
-                            console.error("Failed to get private key:", response.error);
-                            return;
-                          }
-                          const fundResponse = await chrome.runtime.sendMessage({
-                            type: "fundSessionIfNeeded",
-                            sessionAddress: walletInfo.currentSessionAddress,
-                            requiredAmount: "0.01"
-                            // 0.01 ETH
-                          });
-                          if (fundResponse.error) {
-                            console.error("Failed to fund session:", fundResponse.error);
-                          }
-                          await executeCCIPTransfer(
-                            response.privateKey,
-                            11155111 /* ETH_SEPOLIA */,
-                            // Source chain (assuming current session is on Sepolia)
-                            paymentForm.destinationChain,
-                            paymentForm.destinationAddress,
-                            paymentForm.amount,
-                            paymentForm.tokenType
-                          );
-                        } catch (error2) {
-                          console.error("Payment failed:", error2);
-                        }
-                      },
-                      disabled: currentStep !== "idle" && currentStep !== "completed" && currentStep !== "error",
-                      style: {
-                        flex: 1,
-                        padding: "10px",
-                        backgroundColor: currentStep !== "idle" && currentStep !== "completed" && currentStep !== "error" ? "#6c757d" : "#28a745",
-                        color: "white",
-                        border: "none",
-                        borderRadius: "4px",
-                        cursor: currentStep !== "idle" && currentStep !== "completed" && currentStep !== "error" ? "not-allowed" : "pointer",
-                        fontSize: "13px",
-                        fontWeight: "600"
-                      },
-                      onMouseEnter: (e) => {
-                        if (currentStep === "idle" || currentStep === "completed" || currentStep === "error") {
-                          e.currentTarget.style.backgroundColor = "#218838";
-                        }
-                      },
-                      onMouseLeave: (e) => {
-                        if (currentStep === "idle" || currentStep === "completed" || currentStep === "error") {
-                          e.currentTarget.style.backgroundColor = "#28a745";
-                        }
-                      },
-                      children: currentStep === "idle" ? "Confirm Payment" : currentStep === "completed" ? "Payment Complete" : currentStep === "error" ? "Retry Payment" : "Processing..."
-                    }
-                  )
-                ] })
-              ] }),
-              (currentStep !== "idle" || logs.length > 0) && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { style: {
-                marginTop: "15px",
-                padding: "12px",
-                backgroundColor: currentStep === "error" ? "#f8d7da" : "#e7f3ff",
-                border: `1px solid ${currentStep === "error" ? "#f5c6cb" : "#bee5eb"}`,
-                borderRadius: "4px"
-              }, children: [
-                /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h5", { style: {
-                  margin: "0 0 8px 0",
-                  fontSize: "12px",
-                  color: currentStep === "error" ? "#721c24" : "#0c5460",
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center"
-                }, children: [
-                  "Payment Status",
-                  (currentStep === "completed" || currentStep === "error") && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
-                    "button",
-                    {
-                      onClick: () => {
-                        reset();
-                        setShowPaymentOverview(false);
-                      },
-                      style: {
-                        fontSize: "10px",
-                        padding: "2px 6px",
-                        backgroundColor: "#6c757d",
-                        color: "white",
-                        border: "none",
-                        borderRadius: "2px",
-                        cursor: "pointer"
-                      },
-                      children: "Clear"
-                    }
-                  )
-                ] }),
-                /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { style: {
-                  fontSize: "11px",
-                  color: currentStep === "error" ? "#721c24" : "#0c5460",
-                  marginBottom: "8px",
-                  fontWeight: "600"
-                }, children: [
-                  "Current Step: ",
-                  currentStep === "idle" ? "Ready" : currentStep === "approving-token" ? `Approving ${paymentForm.tokenType}` : currentStep === "estimating-fees" ? "Estimating CCIP Fees" : currentStep === "transferring" ? "Initiating CCIP Transfer" : currentStep === "waiting-confirmation" ? "Waiting for Confirmation" : currentStep === "completed" ? "\u2705 Completed" : currentStep === "error" ? "\u274C Error" : currentStep
-                ] }),
-                messageId && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { style: {
-                  fontSize: "10px",
-                  color: "#0c5460",
-                  backgroundColor: "#e7f3ff",
-                  border: "1px solid #bee5eb",
-                  padding: "6px",
-                  borderRadius: "3px",
-                  marginBottom: "8px",
-                  wordBreak: "break-all"
-                }, children: [
-                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("strong", { children: "CCIP Message ID:" }),
-                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("br", {}),
-                  messageId,
-                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("br", {}),
-                  /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("small", { children: [
-                    "Track on ",
-                    /* @__PURE__ */ (0, import_jsx_runtime.jsx)("a", { href: `https://ccip.chain.link/msg/${messageId}`, target: "_blank", rel: "noopener noreferrer", style: { color: "#007bff" }, children: "CCIP Explorer" })
-                  ] })
-                ] }),
-                transferError && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { style: {
-                  fontSize: "10px",
-                  color: "#721c24",
-                  backgroundColor: "#f8d7da",
-                  border: "1px solid #f5c6cb",
-                  padding: "6px",
-                  borderRadius: "3px",
-                  marginBottom: "8px"
-                }, children: [
-                  "Error: ",
-                  transferError
-                ] }),
-                logs.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { style: {
-                  maxHeight: "120px",
-                  overflowY: "auto",
-                  fontSize: "9px",
-                  fontFamily: "monospace",
-                  backgroundColor: "rgba(255, 255, 255, 0.7)",
-                  padding: "6px",
-                  borderRadius: "3px",
-                  border: "1px solid rgba(0, 0, 0, 0.1)"
-                }, children: logs.map((log, index2) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { style: { marginBottom: "2px", lineHeight: "1.2" }, children: log }, index2)) })
-              ] })
-            ] }) }),
-            transactionProgress && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { style: {
-              marginBottom: "20px",
-              padding: "15px",
-              backgroundColor: transactionProgress.status === "error" ? "#f8d7da" : transactionProgress.status === "completed" ? "#d4edda" : "#e7f3ff",
-              border: `2px solid ${transactionProgress.status === "error" ? "#dc3545" : transactionProgress.status === "completed" ? "#28a745" : "#007bff"}`,
-              borderRadius: "8px"
-            }, children: [
-              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h4", { style: {
-                margin: "0 0 10px 0",
-                color: transactionProgress.status === "error" ? "#721c24" : transactionProgress.status === "completed" ? "#155724" : "#0056b3",
-                fontSize: "14px",
-                display: "flex",
-                alignItems: "center",
-                gap: "8px"
-              }, children: [
-                transactionProgress.status === "processing" && "\u23F3",
-                transactionProgress.status === "completed" && "\u2705",
-                transactionProgress.status === "error" && "\u274C",
-                "Transaction Progress"
-              ] }),
-              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { style: {
-                width: "100%",
-                height: "8px",
-                backgroundColor: "#e9ecef",
-                borderRadius: "4px",
-                marginBottom: "10px",
-                overflow: "hidden"
-              }, children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { style: {
-                width: `${transactionProgress.currentStep / transactionProgress.totalSteps * 100}%`,
-                height: "100%",
-                backgroundColor: transactionProgress.status === "error" ? "#dc3545" : transactionProgress.status === "completed" ? "#28a745" : "#007bff",
-                transition: "width 0.3s ease"
-              } }) }),
-              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { style: { fontSize: "12px", marginBottom: "8px" }, children: [
-                /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("strong", { children: [
-                  "Step ",
-                  transactionProgress.currentStep,
-                  "/",
-                  transactionProgress.totalSteps,
-                  ":"
-                ] }),
-                " ",
-                transactionProgress.stepName
-              ] }),
-              transactionProgress.txHash && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { style: { fontSize: "11px", marginBottom: "8px" }, children: [
-                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("strong", { children: "Transaction:" }),
-                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { style: {
-                  fontFamily: "monospace",
-                  wordBreak: "break-all",
-                  fontSize: "10px",
-                  marginTop: "2px"
-                }, children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
-                  "a",
-                  {
-                    href: `https://sepolia.etherscan.io/tx/${transactionProgress.txHash}`,
-                    target: "_blank",
-                    rel: "noopener noreferrer",
-                    style: { color: "#007bff", textDecoration: "underline" },
-                    children: transactionProgress.txHash
-                  }
-                ) })
-              ] }),
-              transactionProgress.error && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { style: {
-                fontSize: "11px",
-                color: "#721c24",
-                backgroundColor: "#f8d7da",
-                padding: "6px",
-                borderRadius: "3px",
-                border: "1px solid #f5c6cb"
-              }, children: [
-                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("strong", { children: "Error:" }),
-                " ",
-                transactionProgress.error
-              ] })
-            ] }),
-            pendingTransactions.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { style: {
-              marginBottom: "15px",
-              padding: "15px",
-              backgroundColor: "#fff3cd",
-              border: "2px solid #ff6b35",
-              borderRadius: "4px"
-            }, children: [
-              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h4", { style: { margin: "0 0 15px 0", color: "#d63384" }, children: [
-                "\u{1F525} Pending Transactions (",
-                pendingTransactions.length,
-                ")"
-              ] }),
-              pendingTransactions.map((tx) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { style: {
-                marginBottom: "15px",
-                padding: "12px",
-                backgroundColor: "#ffffff",
-                border: "1px solid #dee2e6",
-                borderRadius: "4px"
-              }, children: [
-                /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { style: { marginBottom: "8px" }, children: [
-                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("strong", { children: "To:" }),
-                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { style: { fontSize: "11px", fontFamily: "monospace", wordBreak: "break-all" }, children: tx.txParams.to })
-                ] }),
-                /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { style: { marginBottom: "8px" }, children: [
-                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("strong", { children: "Value:" }),
-                  " ",
-                  tx.txParams.value ? ethers_exports.formatEther(tx.txParams.value) + " ETH" : "0 ETH"
-                ] }),
-                /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { style: { marginBottom: "12px", fontSize: "11px", color: "#6c757d" }, children: [
-                  "Gas Limit: ",
-                  tx.txParams.gasLimit || "Not set"
-                ] }),
-                /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { style: { display: "flex", gap: "8px" }, children: [
-                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
-                    "button",
-                    {
-                      onClick: () => approveTransaction(tx.id),
-                      style: {
-                        flex: 1,
-                        padding: "8px",
-                        backgroundColor: "#28a745",
-                        color: "white",
-                        border: "none",
-                        borderRadius: "4px",
-                        cursor: "pointer",
-                        fontSize: "12px"
-                      },
-                      children: "\u2705 Approve"
-                    }
-                  ),
-                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
-                    "button",
-                    {
-                      onClick: () => rejectTransaction(tx.id),
-                      style: {
-                        flex: 1,
-                        padding: "8px",
-                        backgroundColor: "#dc3545",
-                        color: "white",
-                        border: "none",
-                        borderRadius: "4px",
-                        cursor: "pointer",
-                        fontSize: "12px"
-                      },
-                      children: "\u274C Reject"
-                    }
-                  )
-                ] })
-              ] }, tx.id))
-            ] }),
-            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { style: {
-              marginBottom: "15px",
-              padding: "12px",
-              backgroundColor: "#fff3cd",
-              border: "1px solid #ffeaa7",
-              borderRadius: "4px"
-            }, children: [
-              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", { style: { fontSize: "13px", color: "#856404", margin: "0 0 10px 0" }, children: [
-                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("strong", { children: "\u{1F504} Fresh Address Mode:" }),
-                " Each time you connect to a dApp, a new address will be generated for enhanced privacy."
-              ] }),
-              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { style: { display: "flex", alignItems: "center", gap: "8px" }, children: [
-                /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
-                  "input",
-                  {
-                    type: "checkbox",
-                    id: "addressSpoofing",
-                    checked: addressSpoofing,
-                    onChange: toggleAddressSpoofing,
-                    style: { cursor: "pointer" }
-                  }
-                ),
-                /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(
-                  "label",
-                  {
-                    htmlFor: "addressSpoofing",
-                    style: { fontSize: "12px", color: "#856404", cursor: "pointer" },
-                    children: [
-                      /* @__PURE__ */ (0, import_jsx_runtime.jsx)("strong", { children: "\u{1F3AD} Address Spoofing:" }),
-                      " Show fake rich address to dApps to enable actions."
-                    ]
-                  }
-                )
-              ] })
-            ] })
+            ] }, tx.id))
           ] }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { style: {
-            marginTop: "20px",
-            padding: "10px",
-            backgroundColor: "#e7f3ff",
-            border: "1px solid #bee5eb",
-            borderRadius: "4px",
-            fontSize: "12px",
-            color: "#0c5460"
+            marginBottom: "15px",
+            padding: "12px",
+            backgroundColor: "#fff3cd",
+            border: "1px solid #ffeaa7",
+            borderRadius: "4px"
           }, children: [
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("strong", { children: "Security Notice:" }),
-            " This is a Proof of Concept. Do not use with real funds."
-          ] }),
-          walletInfo && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { style: { textAlign: "center", marginTop: "8px" }, children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
-            "span",
-            {
-              onClick: clearWallet,
-              style: {
-                fontSize: "10px",
-                color: "#6c757d",
-                cursor: "pointer",
-                textDecoration: "underline",
-                opacity: 0.7
-              },
-              onMouseEnter: (e) => {
-                e.currentTarget.style.opacity = "1";
-                e.currentTarget.style.color = "#dc3545";
-              },
-              onMouseLeave: (e) => {
-                e.currentTarget.style.opacity = "0.7";
-                e.currentTarget.style.color = "#6c757d";
-              },
-              children: "Change secret"
-            }
-          ) })
-        ] });
+            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", { style: { fontSize: "13px", color: "#856404", margin: "0 0 10px 0" }, children: [
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("strong", { children: "\u{1F504} Fresh Address Mode:" }),
+              " Each time you connect to a dApp, a new address will be generated for enhanced privacy."
+            ] }),
+            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { style: { display: "flex", alignItems: "center", gap: "8px" }, children: [
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
+                "input",
+                {
+                  type: "checkbox",
+                  id: "addressSpoofing",
+                  checked: addressSpoofing,
+                  onChange: toggleAddressSpoofing,
+                  style: { cursor: "pointer" }
+                }
+              ),
+              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(
+                "label",
+                {
+                  htmlFor: "addressSpoofing",
+                  style: { fontSize: "12px", color: "#856404", cursor: "pointer" },
+                  children: [
+                    /* @__PURE__ */ (0, import_jsx_runtime.jsx)("strong", { children: "\u{1F3AD} Address Spoofing:" }),
+                    " Show fake rich address to dApps to enable actions."
+                  ]
+                }
+              )
+            ] })
+          ] })
+        ] }),
+        /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { style: {
+          marginTop: "20px",
+          padding: "10px",
+          backgroundColor: "#e7f3ff",
+          border: "1px solid #bee5eb",
+          borderRadius: "4px",
+          fontSize: "12px",
+          color: "#0c5460"
+        }, children: [
+          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("strong", { children: "Security Notice:" }),
+          " This is a Proof of Concept. Do not use with real funds."
+        ] }),
+        walletInfo && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { style: { textAlign: "center", marginTop: "8px" }, children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
+          "span",
+          {
+            onClick: clearWallet,
+            style: {
+              fontSize: "10px",
+              color: "#6c757d",
+              cursor: "pointer",
+              textDecoration: "underline",
+              opacity: 0.7
+            },
+            onMouseEnter: (e) => {
+              e.currentTarget.style.opacity = "1";
+              e.currentTarget.style.color = "#dc3545";
+            },
+            onMouseLeave: (e) => {
+              e.currentTarget.style.opacity = "0.7";
+              e.currentTarget.style.color = "#6c757d";
+            },
+            children: "Change secret"
+          }
+        ) })
+      ] })
+    ] });
+  }
+  var import_react2, import_jsx_runtime, keyframes, injectKeyframes;
+  var init_App = __esm({
+    "src/popup/App.tsx"() {
+      "use strict";
+      import_react2 = __toESM(require_react());
+      init_lib2();
+      init_useCCIPTransfer();
+      init_ccipChains();
+      import_jsx_runtime = __toESM(require_jsx_runtime());
+      keyframes = {
+        float: `
+    @keyframes float {
+      0% { transform: translateY(0px); }
+      50% { transform: translateY(-10px); }
+      100% { transform: translateY(0px); }
+    }
+  `,
+        spin: `
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+  `,
+        glow: `
+    @keyframes glow {
+      0% { box-shadow: 0 0 5px #06D6A0; }
+      50% { box-shadow: 0 0 20px #06D6A0, 0 0 30px #118AB2; }
+      100% { box-shadow: 0 0 5px #06D6A0; }
+    }
+  `,
+        bounce: `
+    @keyframes bounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-15px); }
+    }
+  `
       };
-      App_default = App;
+      injectKeyframes = () => {
+        const style = document.createElement("style");
+        style.textContent = Object.values(keyframes).join("\n");
+        document.head.appendChild(style);
+      };
     }
   });
 
@@ -56142,7 +56256,7 @@ ${prettyStateOverride(stateOverride)}`;
         throw new Error("Root element not found");
       }
       var root = import_client.default.createRoot(container);
-      root.render(/* @__PURE__ */ (0, import_jsx_runtime2.jsx)(App_default, {}));
+      root.render(/* @__PURE__ */ (0, import_jsx_runtime2.jsx)(App, {}));
     }
   });
   require_popup();

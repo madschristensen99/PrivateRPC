@@ -1,7 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "PrivacyLinks",
-  "version": "0.0.1",
+  "name": "Hashield",
+  "description": "Secure cross-chain transactions with Monero-Ethereum atomic swaps",
+  "version": "0.1.0",
   "action": {
     "default_popup": "popup.html",
     "default_icon": {
