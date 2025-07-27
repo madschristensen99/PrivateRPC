@@ -1,4 +1,4 @@
-# 🛡️ Hashield: Fully Noncompliant Web3 Browsing
+# 🛡️ Hashield: Secure cross-chain transactions with Monero-Ethereum atomic swaps
 
 Web3 wallet extension build on a secure, modular implementation for trustless atomic swaps between EVM chains (Ethereum, Base, etc.) and Monero. Built on 1Inch's escrow interface with adapter-based architecture for maximum flexibility and security.
 
