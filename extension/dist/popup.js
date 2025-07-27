@@ -55113,17 +55113,18 @@ ${prettyStateOverride(stateOverride)}`;
             gap: "8px"
           }, children: [
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { style: {
-              display: "inline-block",
+              display: "inline-flex",
+              alignItems: "center",
+              justifyContent: "center",
               width: "24px",
               height: "24px",
               borderRadius: "50%",
-              backgroundColor: "#4c4c4c",
+              backgroundColor: "#ff6600",
               color: "white",
-              textAlign: "center",
-              lineHeight: "24px",
-              fontSize: "16px",
-              fontWeight: "bold"
-            }, children: "\u20BC" }),
+              fontSize: "14px",
+              fontWeight: "bold",
+              fontFamily: "Arial, sans-serif"
+            }, children: "M" }),
             "Monero Wallet"
           ] }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { style: { marginBottom: "15px" }, children: [

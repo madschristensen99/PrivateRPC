@@ -312,18 +312,19 @@ const MoneroWallet: React.FC<MoneroWalletProps> = ({ isWalletInitialized }) => {
         gap: '8px'
       }}>
         <span style={{ 
-          display: 'inline-block', 
+          display: 'inline-flex', 
+          alignItems: 'center',
+          justifyContent: 'center',
           width: '24px', 
           height: '24px', 
           borderRadius: '50%', 
-          backgroundColor: '#4c4c4c',
+          backgroundColor: '#ff6600',
           color: 'white',
-          textAlign: 'center',
-          lineHeight: '24px',
-          fontSize: '16px',
-          fontWeight: 'bold'
+          fontSize: '14px',
+          fontWeight: 'bold',
+          fontFamily: 'Arial, sans-serif'
         }}>
-          ₼
+          M
         </span>
         Monero Wallet
       </h3>
