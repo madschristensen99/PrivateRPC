@@ -34,9 +34,28 @@ const build = async () => {
       minify: false,
       sourcemap: true,
       define: {
-        'process.env.NODE_ENV': '"production"'
+        'process.env.NODE_ENV': '"production"',
+        'global': 'window'
       },
-      external: ['chrome']
+      external: ['chrome'],
+      supported: {
+        'bigint': true
+      },
+      mainFields: ['browser', 'module', 'main'],
+      loader: {
+        '.wasm': 'file'
+      },
+      plugins: [
+        {
+          name: 'node-modules-polyfill',
+          setup(build) {
+            // Provide empty implementations for Node.js built-in modules
+            build.onResolve({ filter: /^(fs|path|crypto|http|https|child_process|os)$/ }, args => {
+              return { path: path.resolve(__dirname, 'empty-module.js') };
+            });
+          }
+        }
+      ]
     });
 
     // Copy manifest.json and inject.js

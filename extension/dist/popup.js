@@ -798,7 +798,7 @@
   var require_react_dom_production = __commonJS({
     "node_modules/react-dom/cjs/react-dom.production.js"(exports) {
       "use strict";
-      var React = require_react();
+      var React2 = require_react();
       function formatProdErrorMessage(code) {
         var url = "https://react.dev/errors/" + code;
         if (1 < arguments.length) {
@@ -838,7 +838,7 @@
           implementation
         };
       }
-      var ReactSharedInternals = React.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE;
+      var ReactSharedInternals = React2.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE;
       function getCrossOriginStringAs(as, input) {
         if ("font" === as) return "";
         if ("string" === typeof input)
@@ -974,7 +974,7 @@
     "node_modules/react-dom/cjs/react-dom-client.production.js"(exports) {
       "use strict";
       var Scheduler = require_scheduler();
-      var React = require_react();
+      var React2 = require_react();
       var ReactDOM = require_react_dom();
       function formatProdErrorMessage(code) {
         var url = "https://react.dev/errors/" + code;
@@ -1162,7 +1162,7 @@
         return null;
       }
       var isArrayImpl = Array.isArray;
-      var ReactSharedInternals = React.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE;
+      var ReactSharedInternals = React2.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE;
       var ReactDOMSharedInternals = ReactDOM.__DOM_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE;
       var sharedNotPendingObject = {
         pending: false,
@@ -12154,7 +12154,7 @@
           0 === i && attemptExplicitHydrationTarget(target);
         }
       };
-      var isomorphicReactPackageVersion$jscomp$inline_1785 = React.version;
+      var isomorphicReactPackageVersion$jscomp$inline_1785 = React2.version;
       if ("19.1.0" !== isomorphicReactPackageVersion$jscomp$inline_1785)
         throw Error(
           formatProdErrorMessage(
@@ -15898,8 +15898,8 @@
     if (typeof window !== "undefined") {
       return window;
     }
-    if (typeof global !== "undefined") {
-      return global;
+    if (typeof window !== "undefined") {
+      return window;
     }
     throw new Error("unable to locate global object");
   }
@@ -32810,8 +32810,8 @@
     if (typeof window !== "undefined") {
       return window;
     }
-    if (typeof global !== "undefined") {
-      return global;
+    if (typeof window !== "undefined") {
+      return window;
     }
     throw new Error("unable to locate global object");
   }
@@ -54888,35 +54888,673 @@ ${prettyStateOverride(stateOverride)}`;
     }
   });
 
+  // src/popup/MoneroWallet.tsx
+  var import_react2, import_jsx_runtime, MoneroWallet, MoneroWallet_default;
+  var init_MoneroWallet = __esm({
+    "src/popup/MoneroWallet.tsx"() {
+      "use strict";
+      import_react2 = __toESM(require_react());
+      import_jsx_runtime = __toESM(require_jsx_runtime());
+      MoneroWallet = ({ isWalletInitialized }) => {
+        const [balance, setBalance] = (0, import_react2.useState)({
+          total: "0",
+          unlocked: "0",
+          loading: false,
+          error: null
+        });
+        const [address, setAddress] = (0, import_react2.useState)({
+          address: "",
+          loading: false,
+          error: null
+        });
+        const [transaction, setTransaction] = (0, import_react2.useState)({
+          address: "",
+          amount: "",
+          paymentId: "",
+          priority: 1,
+          sending: false,
+          error: null,
+          success: false,
+          txHash: null
+        });
+        const [subaddress, setSubaddress] = (0, import_react2.useState)({
+          label: "",
+          creating: false,
+          address: null,
+          error: null
+        });
+        const [showSendForm, setShowSendForm] = (0, import_react2.useState)(false);
+        const [showSubaddressForm, setShowSubaddressForm] = (0, import_react2.useState)(false);
+        const [isSyncing, setIsSyncing] = (0, import_react2.useState)(false);
+        const [syncStatus, setSyncStatus] = (0, import_react2.useState)({
+          percentDone: 0,
+          message: ""
+        });
+        (0, import_react2.useEffect)(() => {
+          if (isWalletInitialized) {
+            loadMoneroAddress();
+            loadMoneroBalance();
+            checkSyncStatus();
+            const listener = (message) => {
+              if (message.type === "moneroSyncProgress") {
+                setSyncStatus({
+                  percentDone: message.data.percentDone,
+                  message: message.data.message
+                });
+              }
+              if (message.type === "moneroOutputReceived") {
+                loadMoneroBalance();
+              }
+            };
+            chrome.runtime.onMessage.addListener(listener);
+            return () => {
+              chrome.runtime.onMessage.removeListener(listener);
+            };
+          }
+        }, [isWalletInitialized]);
+        const loadMoneroAddress = async () => {
+          setAddress((prev) => ({ ...prev, loading: true, error: null }));
+          try {
+            const response = await chrome.runtime.sendMessage({ type: "getMoneroAddress" });
+            if (response.error) {
+              setAddress((prev) => ({ ...prev, loading: false, error: response.error }));
+            } else {
+              setAddress({
+                address: response.address,
+                loading: false,
+                error: null
+              });
+            }
+          } catch (error) {
+            setAddress((prev) => ({
+              ...prev,
+              loading: false,
+              error: error instanceof Error ? error.message : "Unknown error"
+            }));
+          }
+        };
+        const loadMoneroBalance = async () => {
+          setBalance((prev) => ({ ...prev, loading: true, error: null }));
+          try {
+            const response = await chrome.runtime.sendMessage({ type: "getMoneroBalance" });
+            if (response.error) {
+              setBalance((prev) => ({ ...prev, loading: false, error: response.error }));
+            } else {
+              setBalance({
+                total: response.total,
+                unlocked: response.unlocked,
+                loading: false,
+                error: null
+              });
+            }
+          } catch (error) {
+            setBalance((prev) => ({
+              ...prev,
+              loading: false,
+              error: error instanceof Error ? error.message : "Unknown error"
+            }));
+          }
+        };
+        const checkSyncStatus = async () => {
+          try {
+            const response = await chrome.runtime.sendMessage({ type: "getMoneroWalletStatus" });
+            if (response && !response.error) {
+              setIsSyncing(response.syncing);
+            }
+          } catch (error) {
+            console.error("Error checking sync status:", error);
+          }
+        };
+        const startSync = async () => {
+          setIsSyncing(true);
+          try {
+            await chrome.runtime.sendMessage({ type: "syncMoneroWallet" });
+          } catch (error) {
+            console.error("Error starting sync:", error);
+          }
+        };
+        const sendTransaction2 = async (e) => {
+          e.preventDefault();
+          setTransaction((prev) => ({ ...prev, sending: true, error: null, success: false, txHash: null }));
+          try {
+            const response = await chrome.runtime.sendMessage({
+              type: "sendMoneroTransaction",
+              address: transaction.address,
+              amount: transaction.amount,
+              paymentId: transaction.paymentId,
+              priority: transaction.priority
+            });
+            if (response.error) {
+              setTransaction((prev) => ({ ...prev, sending: false, error: response.error }));
+            } else {
+              setTransaction((prev) => ({
+                ...prev,
+                sending: false,
+                success: true,
+                txHash: response.txHash,
+                address: "",
+                amount: "",
+                paymentId: ""
+              }));
+              loadMoneroBalance();
+            }
+          } catch (error) {
+            setTransaction((prev) => ({
+              ...prev,
+              sending: false,
+              error: error instanceof Error ? error.message : "Unknown error"
+            }));
+          }
+        };
+        const createSubaddress = async (e) => {
+          e.preventDefault();
+          setSubaddress((prev) => ({ ...prev, creating: true, error: null, address: null }));
+          try {
+            const response = await chrome.runtime.sendMessage({
+              type: "createMoneroSubaddress",
+              label: subaddress.label
+            });
+            if (response.error) {
+              setSubaddress((prev) => ({ ...prev, creating: false, error: response.error }));
+            } else {
+              setSubaddress({
+                label: "",
+                creating: false,
+                address: response.address,
+                error: null
+              });
+            }
+          } catch (error) {
+            setSubaddress((prev) => ({
+              ...prev,
+              creating: false,
+              error: error instanceof Error ? error.message : "Unknown error"
+            }));
+          }
+        };
+        const formatMoneroAmount = (atomicUnits) => {
+          const amount = BigInt(atomicUnits);
+          const whole = amount / BigInt(1e12);
+          const fraction = amount % BigInt(1e12);
+          const fractionStr = fraction.toString().padStart(12, "0");
+          const trimmedFraction = fractionStr.replace(/0+$/, "");
+          return `${whole}${trimmedFraction ? "." + trimmedFraction : ""} XMR`;
+        };
+        const copyToClipboard = (text) => {
+          navigator.clipboard.writeText(text).then(() => {
+            alert("Address copied to clipboard!");
+          }).catch((err) => {
+            console.error("Could not copy text: ", err);
+          });
+        };
+        if (!isWalletInitialized) {
+          return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { style: {
+            padding: "15px",
+            backgroundColor: "#f8f9fa",
+            borderRadius: "8px",
+            marginTop: "15px"
+          }, children: [
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("h3", { style: { color: "#495057", textAlign: "center" }, children: "Monero Wallet" }),
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", { style: { textAlign: "center", color: "#6c757d" }, children: "Wallet not initialized. Please import or create a wallet first." })
+          ] });
+        }
+        return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { style: {
+          padding: "15px",
+          backgroundColor: "#f8f9fa",
+          borderRadius: "8px",
+          marginTop: "15px"
+        }, children: [
+          /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h3", { style: {
+            color: "#495057",
+            textAlign: "center",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: "8px"
+          }, children: [
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { style: {
+              display: "inline-block",
+              width: "24px",
+              height: "24px",
+              borderRadius: "50%",
+              backgroundColor: "#FF6600",
+              color: "white",
+              textAlign: "center",
+              lineHeight: "24px",
+              fontSize: "16px",
+              fontWeight: "bold"
+            }, children: "\u20BF" }),
+            "Monero Wallet"
+          ] }),
+          /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { style: { marginBottom: "15px" }, children: [
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("h4", { style: { fontSize: "14px", color: "#495057", marginBottom: "5px" }, children: "Your Address:" }),
+            address.loading ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { style: { textAlign: "center", padding: "10px" }, children: "Loading..." }) : address.error ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { style: { color: "#dc3545", fontSize: "12px", marginTop: "5px" }, children: address.error }) : /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { style: {
+              backgroundColor: "#e9ecef",
+              padding: "8px",
+              borderRadius: "4px",
+              fontSize: "12px",
+              wordBreak: "break-all",
+              position: "relative"
+            }, children: [
+              address.address,
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
+                "button",
+                {
+                  onClick: () => copyToClipboard(address.address),
+                  style: {
+                    position: "absolute",
+                    right: "5px",
+                    top: "5px",
+                    background: "none",
+                    border: "none",
+                    cursor: "pointer",
+                    fontSize: "14px"
+                  },
+                  title: "Copy to clipboard",
+                  children: "\u{1F4CB}"
+                }
+              )
+            ] })
+          ] }),
+          /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { style: {
+            marginBottom: "15px",
+            display: "flex",
+            justifyContent: "space-between"
+          }, children: [
+            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("h4", { style: { fontSize: "14px", color: "#495057", marginBottom: "5px" }, children: "Balance:" }),
+              balance.loading ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { children: "Loading..." }) : balance.error ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { style: { color: "#dc3545", fontSize: "12px" }, children: balance.error }) : /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { style: { fontSize: "16px", fontWeight: "bold", color: "#343a40" }, children: formatMoneroAmount(balance.total) }),
+                /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { style: { fontSize: "12px", color: "#6c757d" }, children: [
+                  "Unlocked: ",
+                  formatMoneroAmount(balance.unlocked)
+                ] })
+              ] })
+            ] }),
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
+              "button",
+              {
+                onClick: loadMoneroBalance,
+                style: {
+                  backgroundColor: "#6c757d",
+                  color: "white",
+                  border: "none",
+                  borderRadius: "4px",
+                  padding: "5px 10px",
+                  fontSize: "12px",
+                  cursor: "pointer"
+                },
+                children: "Refresh"
+              }
+            ) })
+          ] }),
+          /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { style: { marginBottom: "15px" }, children: [
+            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { style: {
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              marginBottom: "5px"
+            }, children: [
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("h4", { style: { fontSize: "14px", color: "#495057", margin: 0 }, children: "Sync Status:" }),
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
+                "button",
+                {
+                  onClick: startSync,
+                  disabled: isSyncing,
+                  style: {
+                    backgroundColor: isSyncing ? "#6c757d" : "#28a745",
+                    color: "white",
+                    border: "none",
+                    borderRadius: "4px",
+                    padding: "5px 10px",
+                    fontSize: "12px",
+                    cursor: isSyncing ? "not-allowed" : "pointer"
+                  },
+                  children: isSyncing ? "Syncing..." : "Sync Now"
+                }
+              )
+            ] }),
+            isSyncing && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { style: {
+                height: "6px",
+                backgroundColor: "#e9ecef",
+                borderRadius: "3px",
+                overflow: "hidden"
+              }, children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { style: {
+                height: "100%",
+                width: `${syncStatus.percentDone}%`,
+                backgroundColor: "#28a745",
+                borderRadius: "3px"
+              } }) }),
+              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { style: { fontSize: "12px", color: "#6c757d", marginTop: "5px" }, children: [
+                syncStatus.percentDone.toFixed(2),
+                "% - ",
+                syncStatus.message
+              ] })
+            ] })
+          ] }),
+          /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { style: {
+            display: "flex",
+            gap: "10px",
+            marginBottom: "15px"
+          }, children: [
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
+              "button",
+              {
+                onClick: () => setShowSendForm(!showSendForm),
+                style: {
+                  flex: 1,
+                  backgroundColor: "#FF6600",
+                  color: "white",
+                  border: "none",
+                  borderRadius: "4px",
+                  padding: "8px",
+                  fontSize: "14px",
+                  cursor: "pointer"
+                },
+                children: showSendForm ? "Cancel" : "Send XMR"
+              }
+            ),
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
+              "button",
+              {
+                onClick: () => setShowSubaddressForm(!showSubaddressForm),
+                style: {
+                  flex: 1,
+                  backgroundColor: "#17a2b8",
+                  color: "white",
+                  border: "none",
+                  borderRadius: "4px",
+                  padding: "8px",
+                  fontSize: "14px",
+                  cursor: "pointer"
+                },
+                children: showSubaddressForm ? "Cancel" : "New Address"
+              }
+            )
+          ] }),
+          showSendForm && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { style: {
+            marginBottom: "15px",
+            padding: "10px",
+            backgroundColor: "#e9ecef",
+            borderRadius: "4px"
+          }, children: [
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("h4", { style: { fontSize: "14px", color: "#495057", marginBottom: "10px" }, children: "Send Monero" }),
+            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("form", { onSubmit: sendTransaction2, children: [
+              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { style: { marginBottom: "10px" }, children: [
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
+                  "label",
+                  {
+                    htmlFor: "recipient-address",
+                    style: { display: "block", fontSize: "12px", color: "#495057", marginBottom: "3px" },
+                    children: "Recipient Address:"
+                  }
+                ),
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
+                  "input",
+                  {
+                    id: "recipient-address",
+                    type: "text",
+                    value: transaction.address,
+                    onChange: (e) => setTransaction((prev) => ({ ...prev, address: e.target.value })),
+                    style: {
+                      width: "100%",
+                      padding: "6px",
+                      borderRadius: "4px",
+                      border: "1px solid #ced4da",
+                      fontSize: "14px"
+                    },
+                    required: true
+                  }
+                )
+              ] }),
+              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { style: { marginBottom: "10px" }, children: [
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
+                  "label",
+                  {
+                    htmlFor: "amount",
+                    style: { display: "block", fontSize: "12px", color: "#495057", marginBottom: "3px" },
+                    children: "Amount (XMR):"
+                  }
+                ),
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
+                  "input",
+                  {
+                    id: "amount",
+                    type: "number",
+                    step: "0.000001",
+                    min: "0.000001",
+                    value: transaction.amount,
+                    onChange: (e) => setTransaction((prev) => ({ ...prev, amount: e.target.value })),
+                    style: {
+                      width: "100%",
+                      padding: "6px",
+                      borderRadius: "4px",
+                      border: "1px solid #ced4da",
+                      fontSize: "14px"
+                    },
+                    required: true
+                  }
+                )
+              ] }),
+              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { style: { marginBottom: "10px" }, children: [
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
+                  "label",
+                  {
+                    htmlFor: "payment-id",
+                    style: { display: "block", fontSize: "12px", color: "#495057", marginBottom: "3px" },
+                    children: "Payment ID (optional):"
+                  }
+                ),
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
+                  "input",
+                  {
+                    id: "payment-id",
+                    type: "text",
+                    value: transaction.paymentId,
+                    onChange: (e) => setTransaction((prev) => ({ ...prev, paymentId: e.target.value })),
+                    style: {
+                      width: "100%",
+                      padding: "6px",
+                      borderRadius: "4px",
+                      border: "1px solid #ced4da",
+                      fontSize: "14px"
+                    }
+                  }
+                )
+              ] }),
+              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { style: { marginBottom: "15px" }, children: [
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
+                  "label",
+                  {
+                    htmlFor: "priority",
+                    style: { display: "block", fontSize: "12px", color: "#495057", marginBottom: "3px" },
+                    children: "Priority:"
+                  }
+                ),
+                /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(
+                  "select",
+                  {
+                    id: "priority",
+                    value: transaction.priority,
+                    onChange: (e) => setTransaction((prev) => ({ ...prev, priority: parseInt(e.target.value) })),
+                    style: {
+                      width: "100%",
+                      padding: "6px",
+                      borderRadius: "4px",
+                      border: "1px solid #ced4da",
+                      fontSize: "14px"
+                    },
+                    children: [
+                      /* @__PURE__ */ (0, import_jsx_runtime.jsx)("option", { value: 1, children: "Low" }),
+                      /* @__PURE__ */ (0, import_jsx_runtime.jsx)("option", { value: 2, children: "Medium" }),
+                      /* @__PURE__ */ (0, import_jsx_runtime.jsx)("option", { value: 3, children: "High" }),
+                      /* @__PURE__ */ (0, import_jsx_runtime.jsx)("option", { value: 4, children: "Urgent" })
+                    ]
+                  }
+                )
+              ] }),
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
+                "button",
+                {
+                  type: "submit",
+                  disabled: transaction.sending,
+                  style: {
+                    width: "100%",
+                    backgroundColor: transaction.sending ? "#6c757d" : "#FF6600",
+                    color: "white",
+                    border: "none",
+                    borderRadius: "4px",
+                    padding: "8px",
+                    fontSize: "14px",
+                    cursor: transaction.sending ? "not-allowed" : "pointer"
+                  },
+                  children: transaction.sending ? "Sending..." : "Send Transaction"
+                }
+              ),
+              transaction.error && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { style: { color: "#dc3545", fontSize: "12px", marginTop: "10px" }, children: [
+                "Error: ",
+                transaction.error
+              ] }),
+              transaction.success && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { style: { color: "#28a745", fontSize: "12px", marginTop: "10px" }, children: [
+                "Transaction sent successfully!",
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("br", {}),
+                "TX Hash: ",
+                transaction.txHash
+              ] })
+            ] })
+          ] }),
+          showSubaddressForm && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { style: {
+            marginBottom: "15px",
+            padding: "10px",
+            backgroundColor: "#e9ecef",
+            borderRadius: "4px"
+          }, children: [
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("h4", { style: { fontSize: "14px", color: "#495057", marginBottom: "10px" }, children: "Create New Subaddress" }),
+            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("form", { onSubmit: createSubaddress, children: [
+              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { style: { marginBottom: "15px" }, children: [
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
+                  "label",
+                  {
+                    htmlFor: "label",
+                    style: { display: "block", fontSize: "12px", color: "#495057", marginBottom: "3px" },
+                    children: "Label (optional):"
+                  }
+                ),
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
+                  "input",
+                  {
+                    id: "label",
+                    type: "text",
+                    value: subaddress.label,
+                    onChange: (e) => setSubaddress((prev) => ({ ...prev, label: e.target.value })),
+                    style: {
+                      width: "100%",
+                      padding: "6px",
+                      borderRadius: "4px",
+                      border: "1px solid #ced4da",
+                      fontSize: "14px"
+                    }
+                  }
+                )
+              ] }),
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
+                "button",
+                {
+                  type: "submit",
+                  disabled: subaddress.creating,
+                  style: {
+                    width: "100%",
+                    backgroundColor: subaddress.creating ? "#6c757d" : "#17a2b8",
+                    color: "white",
+                    border: "none",
+                    borderRadius: "4px",
+                    padding: "8px",
+                    fontSize: "14px",
+                    cursor: subaddress.creating ? "not-allowed" : "pointer"
+                  },
+                  children: subaddress.creating ? "Creating..." : "Create Subaddress"
+                }
+              ),
+              subaddress.error && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { style: { color: "#dc3545", fontSize: "12px", marginTop: "10px" }, children: [
+                "Error: ",
+                subaddress.error
+              ] }),
+              subaddress.address && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { style: { marginTop: "10px" }, children: [
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { style: { fontSize: "12px", color: "#495057", marginBottom: "5px" }, children: "New subaddress created:" }),
+                /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { style: {
+                  backgroundColor: "#ffffff",
+                  padding: "8px",
+                  borderRadius: "4px",
+                  fontSize: "12px",
+                  wordBreak: "break-all",
+                  position: "relative"
+                }, children: [
+                  subaddress.address,
+                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
+                    "button",
+                    {
+                      onClick: () => subaddress.address && copyToClipboard(subaddress.address),
+                      style: {
+                        position: "absolute",
+                        right: "5px",
+                        top: "5px",
+                        background: "none",
+                        border: "none",
+                        cursor: "pointer",
+                        fontSize: "14px"
+                      },
+                      title: "Copy to clipboard",
+                      children: "\u{1F4CB}"
+                    }
+                  )
+                ] })
+              ] })
+            ] })
+          ] }),
+          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { style: {
+            fontSize: "12px",
+            color: "#6c757d",
+            textAlign: "center",
+            marginTop: "10px"
+          }, children: "Powered by monero-ts" })
+        ] });
+      };
+      MoneroWallet_default = MoneroWallet;
+    }
+  });
+
   // src/popup/App.tsx
   function App() {
-    const [mnemonic, setMnemonic] = (0, import_react2.useState)("");
-    const [walletInfo, setWalletInfo] = (0, import_react2.useState)(null);
-    const [pendingTransactions, setPendingTransactions] = (0, import_react2.useState)([]);
-    const [isImporting, setIsImporting] = (0, import_react2.useState)(false);
-    const [error, setError] = (0, import_react2.useState)("");
-    const [addressSpoofing, setAddressSpoofing] = (0, import_react2.useState)(true);
-    const [showSessionList, setShowSessionList] = (0, import_react2.useState)(false);
-    const [sessionAddresses, setSessionAddresses] = (0, import_react2.useState)([]);
-    const [masterBalance, setMasterBalance] = (0, import_react2.useState)("0");
-    const [poolBalance, setPoolBalance] = (0, import_react2.useState)("0");
-    const [showDepositSuggestion, setShowDepositSuggestion] = (0, import_react2.useState)(false);
-    const [showPayUSDC, setShowPayUSDC] = (0, import_react2.useState)(false);
-    const [showPaymentOverview, setShowPaymentOverview] = (0, import_react2.useState)(false);
-    const [transactionProgress, setTransactionProgress] = (0, import_react2.useState)(null);
-    const [paymentForm, setPaymentForm] = (0, import_react2.useState)({
+    const [mnemonic, setMnemonic] = (0, import_react3.useState)("");
+    const [walletInfo, setWalletInfo] = (0, import_react3.useState)(null);
+    const [moneroWalletInitialized, setMoneroWalletInitialized] = (0, import_react3.useState)(false);
+    const [pendingTransactions, setPendingTransactions] = (0, import_react3.useState)([]);
+    const [isImporting, setIsImporting] = (0, import_react3.useState)(false);
+    const [error, setError] = (0, import_react3.useState)("");
+    const [addressSpoofing, setAddressSpoofing] = (0, import_react3.useState)(true);
+    const [showSessionList, setShowSessionList] = (0, import_react3.useState)(false);
+    const [sessionAddresses, setSessionAddresses] = (0, import_react3.useState)([]);
+    const [masterBalance, setMasterBalance] = (0, import_react3.useState)("0");
+    const [poolBalance, setPoolBalance] = (0, import_react3.useState)("0");
+    const [showDepositSuggestion, setShowDepositSuggestion] = (0, import_react3.useState)(false);
+    const [showPayUSDC, setShowPayUSDC] = (0, import_react3.useState)(false);
+    const [showPaymentOverview, setShowPaymentOverview] = (0, import_react3.useState)(false);
+    const [transactionProgress, setTransactionProgress] = (0, import_react3.useState)(null);
+    const [paymentForm, setPaymentForm] = (0, import_react3.useState)({
       destinationAddress: "",
       amount: "",
       destinationChain: 11155111 /* ETH_SEPOLIA */,
       tokenType: "USDC"
     });
     const { currentStep, logs, error: transferError, messageId, executeCCIPTransfer, reset } = useCCIPTransfer();
-    (0, import_react2.useEffect)(() => {
+    (0, import_react3.useEffect)(() => {
       injectKeyframes();
       loadExistingWallet();
       loadAddressSpoofing();
       loadMasterBalance();
       loadPoolBalance();
+      checkMoneroWalletStatus();
       const progressInterval = setInterval(loadTransactionProgress, 1e3);
       return () => clearInterval(progressInterval);
     }, []);
@@ -55018,13 +55656,23 @@ ${prettyStateOverride(stateOverride)}`;
     const loadExistingWallet = async () => {
       try {
         const response = await chrome.runtime.sendMessage({ type: "getWalletInfo" });
-        if (response && !response.error) {
+        if (response && response.masterAddress) {
           setWalletInfo(response);
-          loadMasterBalance();
+          loadPendingTransactions();
+          loadSessionAddresses();
         }
-        await loadPendingTransactions();
       } catch (err) {
-        console.error("Error loading wallet:", err);
+        console.error("Error loading wallet info:", err);
+      }
+    };
+    const checkMoneroWalletStatus = async () => {
+      try {
+        const response = await chrome.runtime.sendMessage({ type: "getMoneroWalletStatus" });
+        if (response && !response.error) {
+          setMoneroWalletInitialized(response.initialized);
+        }
+      } catch (err) {
+        console.error("Error checking Monero wallet status:", err);
       }
     };
     const loadPendingTransactions = async () => {
@@ -55056,13 +55704,14 @@ ${prettyStateOverride(stateOverride)}`;
       }
     };
     const importWallet = async () => {
-      if (!mnemonic.trim()) {
-        setError("Please enter a seed phrase");
-        return;
-      }
       setIsImporting(true);
       setError("");
       try {
+        if (!mnemonic.trim()) {
+          setError("Please enter a seed phrase");
+          setIsImporting(false);
+          return;
+        }
         const response = await chrome.runtime.sendMessage({
           type: "importWallet",
           seedPhrase: mnemonic.trim()
@@ -55070,26 +55719,11 @@ ${prettyStateOverride(stateOverride)}`;
         if (response.error) {
           setError(response.error);
         } else {
-          setWalletInfo({
-            masterAddress: response.masterAddress,
-            currentSessionAddress: null,
-            sessionCount: 0
-          });
           setMnemonic("");
-          setError("");
-          const masterBalanceResponse = await chrome.runtime.sendMessage({ type: "getMasterBalance" });
-          const poolBalanceResponse = await chrome.runtime.sendMessage({ type: "getPoolBalance" });
-          if (masterBalanceResponse && !masterBalanceResponse.error) {
-            setMasterBalance(masterBalanceResponse.balance);
-          }
-          if (poolBalanceResponse && !poolBalanceResponse.error) {
-            setPoolBalance(poolBalanceResponse.balance);
-          }
-          const poolBalanceNum = parseFloat(poolBalanceResponse?.balance || "0");
-          const masterBalanceNum = parseFloat(masterBalanceResponse?.balance || "0");
-          if (poolBalanceNum === 0 && masterBalanceNum > 0) {
-            setShowDepositSuggestion(true);
-          }
+          loadExistingWallet();
+          setTimeout(checkMoneroWalletStatus, 1e3);
+          loadMasterBalance();
+          loadPoolBalance();
         }
       } catch (err) {
         setError("Invalid seed phrase");
@@ -55120,12 +55754,12 @@ ${prettyStateOverride(stateOverride)}`;
         console.error("Error clearing wallet:", err);
       }
     };
-    const renderLoadingSpinner = () => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { style: {
+    const renderLoadingSpinner = () => /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("div", { style: {
       display: "flex",
       justifyContent: "center",
       marginTop: "20px",
       marginBottom: "20px"
-    }, children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { style: {
+    }, children: /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("div", { style: {
       width: "40px",
       height: "40px",
       borderRadius: "50%",
@@ -55135,7 +55769,7 @@ ${prettyStateOverride(stateOverride)}`;
       animation: "spin 1.5s linear infinite",
       boxShadow: "0 0 15px rgba(255, 102, 0, 0.5)"
     } }) });
-    return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { style: {
+    return /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("div", { style: {
       width: "360px",
       minHeight: "500px",
       padding: "20px",
@@ -55148,7 +55782,7 @@ ${prettyStateOverride(stateOverride)}`;
       borderRadius: "8px",
       borderLeft: "4px solid #FF6600"
     }, children: [
-      /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { style: {
+      /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("div", { style: {
         position: "absolute",
         top: 0,
         right: 0,
@@ -55157,7 +55791,7 @@ ${prettyStateOverride(stateOverride)}`;
         background: "linear-gradient(90deg, #FF6600 0%, #FF8C00 100%)",
         zIndex: 1
       } }),
-      /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { style: {
+      /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("div", { style: {
         position: "absolute",
         bottom: "10%",
         left: "0",
@@ -55166,7 +55800,7 @@ ${prettyStateOverride(stateOverride)}`;
         background: "linear-gradient(90deg, transparent, rgba(6, 214, 160, 0.4), transparent)",
         zIndex: 0
       } }),
-      /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { style: {
+      /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("div", { style: {
         position: "absolute",
         top: "10%",
         left: "0",
@@ -55175,7 +55809,7 @@ ${prettyStateOverride(stateOverride)}`;
         background: "linear-gradient(90deg, transparent, rgba(6, 214, 160, 0.4), transparent)",
         zIndex: 0
       } }),
-      /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { style: {
+      /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("div", { style: {
         position: "absolute",
         bottom: "10%",
         left: "0",
@@ -55184,19 +55818,19 @@ ${prettyStateOverride(stateOverride)}`;
         background: "linear-gradient(90deg, transparent, rgba(17, 138, 178, 0.4), transparent)",
         zIndex: 0
       } }),
-      /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { style: {
+      /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("div", { style: {
         position: "relative",
         zIndex: 1
       }, children: [
-        /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h2", { style: { margin: "0 0 20px 0", color: "#FFFFFF", textAlign: "center", fontFamily: "'Roboto', 'Arial', sans-serif", fontWeight: "bold", textShadow: "0 1px 2px rgba(0, 0, 0, 0.5)" }, children: [
-          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { style: { color: "#FF6600" }, children: "Hash" }),
+        /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("h2", { style: { margin: "0 0 20px 0", color: "#FFFFFF", textAlign: "center", fontFamily: "'Roboto', 'Arial', sans-serif", fontWeight: "bold", textShadow: "0 1px 2px rgba(0, 0, 0, 0.5)" }, children: [
+          /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("span", { style: { color: "#FF6600" }, children: "Hash" }),
           "ield"
         ] }),
-        !walletInfo ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [
-          /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { style: { marginBottom: "15px" }, children: [
-            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", { style: { display: "flex", alignItems: "center", gap: "6px", marginBottom: "5px", color: "#FFFFFF", fontWeight: "bold" }, children: [
+        !walletInfo ? /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("div", { children: [
+          /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("div", { style: { marginBottom: "15px" }, children: [
+            /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("label", { style: { display: "flex", alignItems: "center", gap: "6px", marginBottom: "5px", color: "#FFFFFF", fontWeight: "bold" }, children: [
               "Enter 12-word Hashield secret:",
-              /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
+              /* @__PURE__ */ (0, import_jsx_runtime2.jsx)(
                 "span",
                 {
                   title: "For the demo, use a 12-word seed phrase with testnet funds",
@@ -55218,7 +55852,7 @@ ${prettyStateOverride(stateOverride)}`;
                 }
               )
             ] }),
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
+            /* @__PURE__ */ (0, import_jsx_runtime2.jsx)(
               "textarea",
               {
                 rows: 3,
@@ -55236,7 +55870,7 @@ ${prettyStateOverride(stateOverride)}`;
               }
             )
           ] }),
-          error && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { style: {
+          error && /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("div", { style: {
             color: "red",
             fontSize: "12px",
             marginBottom: "10px",
@@ -55245,7 +55879,7 @@ ${prettyStateOverride(stateOverride)}`;
             border: "1px solid #ffcdd2",
             borderRadius: "4px"
           }, children: error }),
-          /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
+          /* @__PURE__ */ (0, import_jsx_runtime2.jsx)(
             "button",
             {
               onClick: importWallet,
@@ -55266,19 +55900,19 @@ ${prettyStateOverride(stateOverride)}`;
               children: isImporting ? "Importing..." : "Import Secret"
             }
           )
-        ] }) : /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [
-          /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { style: {
+        ] }) : /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("div", { children: [
+          /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("div", { style: {
             marginBottom: "20px",
             padding: "15px",
             backgroundColor: "#f8f9fa",
             border: "1px solid #e9ecef",
             borderRadius: "4px"
           }, children: [
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("h3", { style: { margin: "0 0 15px 0", color: "#333" }, children: "Hashield Wallet" }),
-            walletInfo.currentSessionAddress && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { style: { marginBottom: "15px" }, children: [
-              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { style: { display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "5px" }, children: [
-                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("strong", { style: { color: "#28a745" }, children: "Current Session Address:" }),
-                /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
+            /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("h3", { style: { margin: "0 0 15px 0", color: "#333" }, children: "Hashield Wallet" }),
+            walletInfo.currentSessionAddress && /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("div", { style: { marginBottom: "15px" }, children: [
+              /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("div", { style: { display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "5px" }, children: [
+                /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("strong", { style: { color: "#28a745" }, children: "Current Session Address:" }),
+                /* @__PURE__ */ (0, import_jsx_runtime2.jsx)(
                   "span",
                   {
                     onClick: () => {
@@ -55307,7 +55941,7 @@ ${prettyStateOverride(stateOverride)}`;
                   }
                 )
               ] }),
-              /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
+              /* @__PURE__ */ (0, import_jsx_runtime2.jsx)(
                 "div",
                 {
                   onClick: () => {
@@ -55341,7 +55975,7 @@ ${prettyStateOverride(stateOverride)}`;
                   children: walletInfo.currentSessionAddress
                 }
               ),
-              showSessionList && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { style: {
+              showSessionList && /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("div", { style: {
                 marginTop: "10px",
                 maxHeight: "200px",
                 overflowY: "auto",
@@ -55349,14 +55983,14 @@ ${prettyStateOverride(stateOverride)}`;
                 borderRadius: "4px",
                 backgroundColor: "#f8f9fa"
               }, children: [
-                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { style: {
+                /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("div", { style: {
                   padding: "8px",
                   fontSize: "12px",
                   fontWeight: "bold",
                   borderBottom: "1px solid #dee2e6",
                   backgroundColor: "#e9ecef"
                 }, children: "Previous Sessions" }),
-                sessionAddresses.length > 0 ? sessionAddresses.map((session) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(
+                sessionAddresses.length > 0 ? sessionAddresses.map((session) => /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)(
                   "div",
                   {
                     onClick: () => {
@@ -55382,7 +56016,7 @@ ${prettyStateOverride(stateOverride)}`;
                       }
                     },
                     children: [
-                      /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { style: {
+                      /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("div", { style: {
                         fontSize: "11px",
                         color: "#6c757d",
                         marginBottom: "2px",
@@ -55390,13 +56024,13 @@ ${prettyStateOverride(stateOverride)}`;
                         justifyContent: "space-between",
                         alignItems: "center"
                       }, children: [
-                        /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { children: [
+                        /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("span", { children: [
                           "Session #",
                           session.sessionNumber,
                           " ",
                           session.isCurrent && "(Current)"
                         ] }),
-                        /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { style: { display: "flex", gap: "8px" }, children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
+                        /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("div", { style: { display: "flex", gap: "8px" }, children: /* @__PURE__ */ (0, import_jsx_runtime2.jsx)(
                           "span",
                           {
                             onClick: (e) => {
@@ -55414,7 +56048,7 @@ ${prettyStateOverride(stateOverride)}`;
                           }
                         ) })
                       ] }),
-                      /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
+                      /* @__PURE__ */ (0, import_jsx_runtime2.jsx)(
                         "div",
                         {
                           style: {
@@ -55432,36 +56066,36 @@ ${prettyStateOverride(stateOverride)}`;
                     ]
                   },
                   session.sessionNumber
-                )) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { style: { padding: "12px", fontSize: "11px", color: "#6c757d", textAlign: "center" }, children: "No previous sessions found" })
+                )) : /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("div", { style: { padding: "12px", fontSize: "11px", color: "#6c757d", textAlign: "center" }, children: "No previous sessions found" })
               ] })
             ] }),
-            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { style: { fontSize: "12px", color: "#6c757d" }, children: [
+            /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("div", { style: { fontSize: "12px", color: "#6c757d" }, children: [
               "Sessions Generated: ",
-              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("strong", { children: walletInfo.sessionCount })
+              /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("strong", { children: walletInfo.sessionCount })
             ] }),
-            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { style: { fontSize: "12px", color: "#6c757d", marginTop: "5px" }, children: [
+            /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("div", { style: { fontSize: "12px", color: "#6c757d", marginTop: "5px" }, children: [
               "Pool Balance: ",
-              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("strong", { style: { color: "#007bff" }, children: [
+              /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("strong", { style: { color: "#007bff" }, children: [
                 poolBalance,
                 " ETH"
               ] })
             ] })
           ] }),
-          showDepositSuggestion && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { style: {
+          showDepositSuggestion && /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("div", { style: {
             marginBottom: "20px",
             padding: "15px",
             backgroundColor: "#e7f3ff",
             border: "2px solid #007bff",
             borderRadius: "8px"
           }, children: [
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("h4", { style: { margin: "0 0 10px 0", color: "#0056b3", fontSize: "14px" }, children: "\u{1F4B0} Deposit Suggestion" }),
-            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", { style: { fontSize: "12px", color: "#0056b3", margin: "0 0 15px 0" }, children: [
+            /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("h4", { style: { margin: "0 0 10px 0", color: "#0056b3", fontSize: "14px" }, children: "\u{1F4B0} Deposit Suggestion" }),
+            /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("p", { style: { fontSize: "12px", color: "#0056b3", margin: "0 0 15px 0" }, children: [
               "To enable secure transactions, consider depositing some of your balance (",
               (parseFloat(masterBalance) * 0.5).toFixed(4),
               " ETH) to the Pool contract."
             ] }),
-            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { style: { display: "flex", gap: "8px" }, children: [
-              /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
+            /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("div", { style: { display: "flex", gap: "8px" }, children: [
+              /* @__PURE__ */ (0, import_jsx_runtime2.jsx)(
                 "button",
                 {
                   onClick: () => setShowDepositSuggestion(false),
@@ -55478,7 +56112,7 @@ ${prettyStateOverride(stateOverride)}`;
                   children: "Maybe Later"
                 }
               ),
-              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(
+              /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)(
                 "button",
                 {
                   onClick: async () => {
@@ -55510,10 +56144,10 @@ ${prettyStateOverride(stateOverride)}`;
               )
             ] })
           ] }),
-          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { style: {
+          /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("div", { style: {
             marginBottom: "20px",
             textAlign: "center"
-          }, children: !showPayUSDC ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(
+          }, children: !showPayUSDC ? /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)(
             "button",
             {
               onClick: () => setShowPayUSDC(true),
@@ -55544,7 +56178,7 @@ ${prettyStateOverride(stateOverride)}`;
                 e.currentTarget.style.boxShadow = "0 2px 8px rgba(39, 117, 202, 0.3)";
               },
               children: [
-                /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
+                /* @__PURE__ */ (0, import_jsx_runtime2.jsx)(
                   "img",
                   {
                     src: "usdc-logo.png",
@@ -55559,20 +56193,20 @@ ${prettyStateOverride(stateOverride)}`;
                 "Pay"
               ]
             }
-          ) : /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { style: {
+          ) : /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("div", { style: {
             padding: "20px",
             backgroundColor: "#f8f9fa",
             border: "1px solid #e9ecef",
             borderRadius: "8px",
             textAlign: "left"
           }, children: [
-            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { style: {
+            /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("div", { style: {
               display: "flex",
               justifyContent: "space-between",
               alignItems: "center",
               marginBottom: "15px"
             }, children: [
-              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h4", { style: {
+              /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("h4", { style: {
                 margin: 0,
                 color: "#333",
                 fontSize: "14px",
@@ -55580,7 +56214,7 @@ ${prettyStateOverride(stateOverride)}`;
                 alignItems: "center",
                 gap: "6px"
               }, children: [
-                /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
+                /* @__PURE__ */ (0, import_jsx_runtime2.jsx)(
                   "img",
                   {
                     src: "usdc-logo.png",
@@ -55594,7 +56228,7 @@ ${prettyStateOverride(stateOverride)}`;
                 ),
                 "Pay"
               ] }),
-              /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
+              /* @__PURE__ */ (0, import_jsx_runtime2.jsx)(
                 "span",
                 {
                   onClick: () => setShowPayUSDC(false),
@@ -55608,15 +56242,15 @@ ${prettyStateOverride(stateOverride)}`;
                 }
               )
             ] }),
-            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { style: { marginBottom: "12px" }, children: [
-              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { style: {
+            /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("div", { style: { marginBottom: "12px" }, children: [
+              /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("label", { style: {
                 display: "block",
                 marginBottom: "4px",
                 fontSize: "12px",
                 color: "#666",
                 fontWeight: "500"
               }, children: "Token Type" }),
-              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(
+              /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)(
                 "select",
                 {
                   value: paymentForm.tokenType,
@@ -55634,21 +56268,21 @@ ${prettyStateOverride(stateOverride)}`;
                     boxSizing: "border-box"
                   },
                   children: [
-                    /* @__PURE__ */ (0, import_jsx_runtime.jsx)("option", { value: "USDC", children: "USDC" }),
-                    /* @__PURE__ */ (0, import_jsx_runtime.jsx)("option", { value: "CCIP-BnM", children: "CCIP-BnM (Test Token)" })
+                    /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("option", { value: "USDC", children: "USDC" }),
+                    /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("option", { value: "CCIP-BnM", children: "CCIP-BnM (Test Token)" })
                   ]
                 }
               )
             ] }),
-            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { style: { marginBottom: "12px" }, children: [
-              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { style: {
+            /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("div", { style: { marginBottom: "12px" }, children: [
+              /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("label", { style: {
                 display: "block",
                 marginBottom: "4px",
                 fontSize: "12px",
                 color: "#666",
                 fontWeight: "500"
               }, children: "Destination Address" }),
-              /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
+              /* @__PURE__ */ (0, import_jsx_runtime2.jsx)(
                 "input",
                 {
                   type: "text",
@@ -55670,8 +56304,8 @@ ${prettyStateOverride(stateOverride)}`;
                 }
               )
             ] }),
-            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { style: { marginBottom: "12px" }, children: [
-              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", { style: {
+            /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("div", { style: { marginBottom: "12px" }, children: [
+              /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("label", { style: {
                 display: "block",
                 marginBottom: "4px",
                 fontSize: "12px",
@@ -55682,7 +56316,7 @@ ${prettyStateOverride(stateOverride)}`;
                 paymentForm.tokenType,
                 ")"
               ] }),
-              /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
+              /* @__PURE__ */ (0, import_jsx_runtime2.jsx)(
                 "input",
                 {
                   type: "number",
@@ -55705,15 +56339,15 @@ ${prettyStateOverride(stateOverride)}`;
                 }
               )
             ] }),
-            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { style: { marginBottom: "15px" }, children: [
-              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { style: {
+            /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("div", { style: { marginBottom: "15px" }, children: [
+              /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("label", { style: {
                 display: "block",
                 marginBottom: "4px",
                 fontSize: "12px",
                 color: "#666",
                 fontWeight: "500"
               }, children: "Destination Chain" }),
-              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(
+              /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)(
                 "select",
                 {
                   value: paymentForm.destinationChain,
@@ -55731,17 +56365,17 @@ ${prettyStateOverride(stateOverride)}`;
                     boxSizing: "border-box"
                   },
                   children: [
-                    /* @__PURE__ */ (0, import_jsx_runtime.jsx)("option", { value: 11155111 /* ETH_SEPOLIA */, children: "Ethereum Sepolia" }),
-                    /* @__PURE__ */ (0, import_jsx_runtime.jsx)("option", { value: 84532 /* BASE_SEPOLIA */, children: "Base Sepolia" }),
-                    /* @__PURE__ */ (0, import_jsx_runtime.jsx)("option", { value: 421614 /* ARB_SEPOLIA */, children: "Arbitrum Sepolia" }),
-                    /* @__PURE__ */ (0, import_jsx_runtime.jsx)("option", { value: 43113 /* AVAX_FUJI */, children: "Avalanche Fuji" }),
-                    /* @__PURE__ */ (0, import_jsx_runtime.jsx)("option", { value: 80002 /* POLYGON_AMOY */, children: "Polygon Amoy" }),
-                    /* @__PURE__ */ (0, import_jsx_runtime.jsx)("option", { value: 2021 /* RONIN_SAIGON */, children: "Ronin Saigon" })
+                    /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("option", { value: 11155111 /* ETH_SEPOLIA */, children: "Ethereum Sepolia" }),
+                    /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("option", { value: 84532 /* BASE_SEPOLIA */, children: "Base Sepolia" }),
+                    /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("option", { value: 421614 /* ARB_SEPOLIA */, children: "Arbitrum Sepolia" }),
+                    /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("option", { value: 43113 /* AVAX_FUJI */, children: "Avalanche Fuji" }),
+                    /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("option", { value: 80002 /* POLYGON_AMOY */, children: "Polygon Amoy" }),
+                    /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("option", { value: 2021 /* RONIN_SAIGON */, children: "Ronin Saigon" })
                   ]
                 }
               )
             ] }),
-            !showPaymentOverview ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
+            !showPaymentOverview ? /* @__PURE__ */ (0, import_jsx_runtime2.jsx)(
               "button",
               {
                 onClick: () => {
@@ -55771,43 +56405,43 @@ ${prettyStateOverride(stateOverride)}`;
                 },
                 children: "Overview"
               }
-            ) : /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [
-              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { style: {
+            ) : /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("div", { children: [
+              /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("div", { style: {
                 backgroundColor: "#e7f3ff",
                 border: "1px solid #bee5eb",
                 borderRadius: "4px",
                 padding: "12px",
                 marginBottom: "12px"
               }, children: [
-                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("h5", { style: { margin: "0 0 8px 0", fontSize: "12px", color: "#0c5460" }, children: "Payment Overview" }),
-                /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { style: { fontSize: "11px", marginBottom: "4px" }, children: [
-                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { style: { color: "#6c757d" }, children: "To:" }),
-                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { style: {
+                /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("h5", { style: { margin: "0 0 8px 0", fontSize: "12px", color: "#0c5460" }, children: "Payment Overview" }),
+                /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("div", { style: { fontSize: "11px", marginBottom: "4px" }, children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("span", { style: { color: "#6c757d" }, children: "To:" }),
+                  /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("div", { style: {
                     fontFamily: "monospace",
                     wordBreak: "break-all",
                     fontSize: "10px",
                     marginTop: "2px"
                   }, children: paymentForm.destinationAddress })
                 ] }),
-                /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { style: { fontSize: "11px", marginBottom: "4px" }, children: [
-                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { style: { color: "#6c757d" }, children: "Amount:" }),
-                  /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { style: { marginLeft: "8px", fontWeight: "600" }, children: [
+                /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("div", { style: { fontSize: "11px", marginBottom: "4px" }, children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("span", { style: { color: "#6c757d" }, children: "Amount:" }),
+                  /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("span", { style: { marginLeft: "8px", fontWeight: "600" }, children: [
                     paymentForm.amount,
                     " ",
                     paymentForm.tokenType
                   ] })
                 ] }),
-                /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { style: { fontSize: "11px", marginBottom: "4px" }, children: [
-                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { style: { color: "#6c757d" }, children: "Chain:" }),
-                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { style: { marginLeft: "8px" }, children: CCIP_CHAIN_ID_TO_NAME[paymentForm.destinationChain] || "Unknown Chain" })
+                /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("div", { style: { fontSize: "11px", marginBottom: "4px" }, children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("span", { style: { color: "#6c757d" }, children: "Chain:" }),
+                  /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("span", { style: { marginLeft: "8px" }, children: CCIP_CHAIN_ID_TO_NAME[paymentForm.destinationChain] || "Unknown Chain" })
                 ] }),
-                /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { style: { fontSize: "11px", marginBottom: "0" }, children: [
-                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { style: { color: "#6c757d" }, children: "Estimated Cost:" }),
-                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { style: { marginLeft: "8px", fontWeight: "600", color: "#dc3545" }, children: "~0.0023 ETH" })
+                /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("div", { style: { fontSize: "11px", marginBottom: "0" }, children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("span", { style: { color: "#6c757d" }, children: "Estimated Cost:" }),
+                  /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("span", { style: { marginLeft: "8px", fontWeight: "600", color: "#dc3545" }, children: "~0.0023 ETH" })
                 ] })
               ] }),
-              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { style: { display: "flex", gap: "8px" }, children: [
-                /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
+              /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("div", { style: { display: "flex", gap: "8px" }, children: [
+                /* @__PURE__ */ (0, import_jsx_runtime2.jsx)(
                   "button",
                   {
                     onClick: () => setShowPaymentOverview(false),
@@ -55831,7 +56465,7 @@ ${prettyStateOverride(stateOverride)}`;
                     children: "Back"
                   }
                 ),
-                /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
+                /* @__PURE__ */ (0, import_jsx_runtime2.jsx)(
                   "button",
                   {
                     onClick: async () => {
@@ -55894,14 +56528,14 @@ ${prettyStateOverride(stateOverride)}`;
                 )
               ] })
             ] }),
-            (currentStep !== "idle" || logs.length > 0) && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { style: {
+            (currentStep !== "idle" || logs.length > 0) && /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("div", { style: {
               marginTop: "15px",
               padding: "12px",
               backgroundColor: currentStep === "error" ? "#f8d7da" : "#e7f3ff",
               border: `1px solid ${currentStep === "error" ? "#f5c6cb" : "#bee5eb"}`,
               borderRadius: "4px"
             }, children: [
-              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h5", { style: {
+              /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("h5", { style: {
                 margin: "0 0 8px 0",
                 fontSize: "12px",
                 color: currentStep === "error" ? "#721c24" : "#0c5460",
@@ -55910,7 +56544,7 @@ ${prettyStateOverride(stateOverride)}`;
                 alignItems: "center"
               }, children: [
                 "Payment Status",
-                (currentStep === "completed" || currentStep === "error") && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
+                (currentStep === "completed" || currentStep === "error") && /* @__PURE__ */ (0, import_jsx_runtime2.jsx)(
                   "button",
                   {
                     onClick: () => {
@@ -55930,7 +56564,7 @@ ${prettyStateOverride(stateOverride)}`;
                   }
                 )
               ] }),
-              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { style: {
+              /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("div", { style: {
                 fontSize: "11px",
                 color: currentStep === "error" ? "#721c24" : "#0c5460",
                 marginBottom: "8px",
@@ -55939,7 +56573,7 @@ ${prettyStateOverride(stateOverride)}`;
                 "Current Step: ",
                 currentStep === "idle" ? "Ready" : currentStep === "approving-token" ? `Approving ${paymentForm.tokenType}` : currentStep === "estimating-fees" ? "Estimating CCIP Fees" : currentStep === "transferring" ? "Initiating CCIP Transfer" : currentStep === "waiting-confirmation" ? "Waiting for Confirmation" : currentStep === "completed" ? "\u2705 Completed" : currentStep === "error" ? "\u274C Error" : currentStep
               ] }),
-              messageId && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { style: {
+              messageId && /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("div", { style: {
                 fontSize: "10px",
                 color: "#0c5460",
                 backgroundColor: "#e7f3ff",
@@ -55949,16 +56583,16 @@ ${prettyStateOverride(stateOverride)}`;
                 marginBottom: "8px",
                 wordBreak: "break-all"
               }, children: [
-                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("strong", { children: "CCIP Message ID:" }),
-                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("br", {}),
+                /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("strong", { children: "CCIP Message ID:" }),
+                /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("br", {}),
                 messageId,
-                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("br", {}),
-                /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("small", { children: [
+                /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("br", {}),
+                /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("small", { children: [
                   "Track on ",
-                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("a", { href: `https://ccip.chain.link/msg/${messageId}`, target: "_blank", rel: "noopener noreferrer", style: { color: "#007bff" }, children: "CCIP Explorer" })
+                  /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("a", { href: `https://ccip.chain.link/msg/${messageId}`, target: "_blank", rel: "noopener noreferrer", style: { color: "#007bff" }, children: "CCIP Explorer" })
                 ] })
               ] }),
-              transferError && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { style: {
+              transferError && /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("div", { style: {
                 fontSize: "10px",
                 color: "#721c24",
                 backgroundColor: "#f8d7da",
@@ -55970,7 +56604,7 @@ ${prettyStateOverride(stateOverride)}`;
                 "Error: ",
                 transferError
               ] }),
-              logs.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { style: {
+              logs.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("div", { style: {
                 maxHeight: "120px",
                 overflowY: "auto",
                 fontSize: "9px",
@@ -55979,17 +56613,17 @@ ${prettyStateOverride(stateOverride)}`;
                 padding: "6px",
                 borderRadius: "3px",
                 border: "1px solid rgba(0, 0, 0, 0.1)"
-              }, children: logs.map((log, index2) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { style: { marginBottom: "2px", lineHeight: "1.2" }, children: log }, index2)) })
+              }, children: logs.map((log, index2) => /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("div", { style: { marginBottom: "2px", lineHeight: "1.2" }, children: log }, index2)) })
             ] })
           ] }) }),
-          transactionProgress && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { style: {
+          transactionProgress && /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("div", { style: {
             marginBottom: "20px",
             padding: "15px",
             backgroundColor: transactionProgress.status === "error" ? "#f8d7da" : transactionProgress.status === "completed" ? "#d4edda" : "#e7f3ff",
             border: `2px solid ${transactionProgress.status === "error" ? "#dc3545" : transactionProgress.status === "completed" ? "#28a745" : "#007bff"}`,
             borderRadius: "8px"
           }, children: [
-            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h4", { style: {
+            /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("h4", { style: {
               margin: "0 0 10px 0",
               color: transactionProgress.status === "error" ? "#721c24" : transactionProgress.status === "completed" ? "#155724" : "#0056b3",
               fontSize: "14px",
@@ -56002,21 +56636,21 @@ ${prettyStateOverride(stateOverride)}`;
               transactionProgress.status === "error" && "\u274C",
               "Transaction Progress"
             ] }),
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { style: {
+            /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("div", { style: {
               width: "100%",
               height: "8px",
               backgroundColor: "#e9ecef",
               borderRadius: "4px",
               marginBottom: "10px",
               overflow: "hidden"
-            }, children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { style: {
+            }, children: /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("div", { style: {
               width: `${transactionProgress.currentStep / transactionProgress.totalSteps * 100}%`,
               height: "100%",
               backgroundColor: transactionProgress.status === "error" ? "#dc3545" : transactionProgress.status === "completed" ? "#28a745" : "#007bff",
               transition: "width 0.3s ease"
             } }) }),
-            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { style: { fontSize: "12px", marginBottom: "8px" }, children: [
-              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("strong", { children: [
+            /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("div", { style: { fontSize: "12px", marginBottom: "8px" }, children: [
+              /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("strong", { children: [
                 "Step ",
                 transactionProgress.currentStep,
                 "/",
@@ -56026,14 +56660,14 @@ ${prettyStateOverride(stateOverride)}`;
               " ",
               transactionProgress.stepName
             ] }),
-            transactionProgress.txHash && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { style: { fontSize: "11px", marginBottom: "8px" }, children: [
-              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("strong", { children: "Transaction:" }),
-              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { style: {
+            transactionProgress.txHash && /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("div", { style: { fontSize: "11px", marginBottom: "8px" }, children: [
+              /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("strong", { children: "Transaction:" }),
+              /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("div", { style: {
                 fontFamily: "monospace",
                 wordBreak: "break-all",
                 fontSize: "10px",
                 marginTop: "2px"
-              }, children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
+              }, children: /* @__PURE__ */ (0, import_jsx_runtime2.jsx)(
                 "a",
                 {
                   href: `https://sepolia.etherscan.io/tx/${transactionProgress.txHash}`,
@@ -56044,7 +56678,7 @@ ${prettyStateOverride(stateOverride)}`;
                 }
               ) })
             ] }),
-            transactionProgress.error && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { style: {
+            transactionProgress.error && /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("div", { style: {
               fontSize: "11px",
               color: "#721c24",
               backgroundColor: "#f8d7da",
@@ -56052,45 +56686,45 @@ ${prettyStateOverride(stateOverride)}`;
               borderRadius: "3px",
               border: "1px solid #f5c6cb"
             }, children: [
-              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("strong", { children: "Error:" }),
+              /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("strong", { children: "Error:" }),
               " ",
               transactionProgress.error
             ] })
           ] }),
-          pendingTransactions.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { style: {
+          pendingTransactions.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("div", { style: {
             marginBottom: "15px",
             padding: "15px",
             backgroundColor: "#fff3cd",
             border: "2px solid #ff6b35",
             borderRadius: "4px"
           }, children: [
-            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h4", { style: { margin: "0 0 15px 0", color: "#d63384" }, children: [
+            /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("h4", { style: { margin: "0 0 15px 0", color: "#d63384" }, children: [
               "\u{1F525} Pending Transactions (",
               pendingTransactions.length,
               ")"
             ] }),
-            pendingTransactions.map((tx) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { style: {
+            pendingTransactions.map((tx) => /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("div", { style: {
               marginBottom: "15px",
               padding: "12px",
               backgroundColor: "#ffffff",
               border: "1px solid #dee2e6",
               borderRadius: "4px"
             }, children: [
-              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { style: { marginBottom: "8px" }, children: [
-                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("strong", { children: "To:" }),
-                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { style: { fontSize: "11px", fontFamily: "monospace", wordBreak: "break-all" }, children: tx.txParams.to })
+              /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("div", { style: { marginBottom: "8px" }, children: [
+                /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("strong", { children: "To:" }),
+                /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("div", { style: { fontSize: "11px", fontFamily: "monospace", wordBreak: "break-all" }, children: tx.txParams.to })
               ] }),
-              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { style: { marginBottom: "8px" }, children: [
-                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("strong", { children: "Value:" }),
+              /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("div", { style: { marginBottom: "8px" }, children: [
+                /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("strong", { children: "Value:" }),
                 " ",
                 tx.txParams.value ? ethers_exports.formatEther(tx.txParams.value) + " ETH" : "0 ETH"
               ] }),
-              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { style: { marginBottom: "12px", fontSize: "11px", color: "#6c757d" }, children: [
+              /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("div", { style: { marginBottom: "12px", fontSize: "11px", color: "#6c757d" }, children: [
                 "Gas Limit: ",
                 tx.txParams.gasLimit || "Not set"
               ] }),
-              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { style: { display: "flex", gap: "8px" }, children: [
-                /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
+              /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("div", { style: { display: "flex", gap: "8px" }, children: [
+                /* @__PURE__ */ (0, import_jsx_runtime2.jsx)(
                   "button",
                   {
                     onClick: () => approveTransaction(tx.id),
@@ -56107,7 +56741,7 @@ ${prettyStateOverride(stateOverride)}`;
                     children: "\u2705 Approve"
                   }
                 ),
-                /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
+                /* @__PURE__ */ (0, import_jsx_runtime2.jsx)(
                   "button",
                   {
                     onClick: () => rejectTransaction(tx.id),
@@ -56127,19 +56761,19 @@ ${prettyStateOverride(stateOverride)}`;
               ] })
             ] }, tx.id))
           ] }),
-          /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { style: {
+          /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("div", { style: {
             marginBottom: "15px",
             padding: "12px",
             backgroundColor: "#fff3cd",
             border: "1px solid #ffeaa7",
             borderRadius: "4px"
           }, children: [
-            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", { style: { fontSize: "13px", color: "#856404", margin: "0 0 10px 0" }, children: [
-              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("strong", { children: "\u{1F504} Fresh Address Mode:" }),
+            /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("p", { style: { fontSize: "13px", color: "#856404", margin: "0 0 10px 0" }, children: [
+              /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("strong", { children: "\u{1F504} Fresh Address Mode:" }),
               " Each time you connect to a dApp, a new address will be generated for enhanced privacy."
             ] }),
-            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { style: { display: "flex", alignItems: "center", gap: "8px" }, children: [
-              /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
+            /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("div", { style: { display: "flex", alignItems: "center", gap: "8px" }, children: [
+              /* @__PURE__ */ (0, import_jsx_runtime2.jsx)(
                 "input",
                 {
                   type: "checkbox",
@@ -56149,13 +56783,13 @@ ${prettyStateOverride(stateOverride)}`;
                   style: { cursor: "pointer" }
                 }
               ),
-              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(
+              /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)(
                 "label",
                 {
                   htmlFor: "addressSpoofing",
                   style: { fontSize: "12px", color: "#856404", cursor: "pointer" },
                   children: [
-                    /* @__PURE__ */ (0, import_jsx_runtime.jsx)("strong", { children: "\u{1F3AD} Address Spoofing:" }),
+                    /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("strong", { children: "\u{1F3AD} Address Spoofing:" }),
                     " Show fake rich address to dApps to enable actions."
                   ]
                 }
@@ -56163,7 +56797,8 @@ ${prettyStateOverride(stateOverride)}`;
             ] })
           ] })
         ] }),
-        /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { style: {
+        walletInfo && /* @__PURE__ */ (0, import_jsx_runtime2.jsx)(MoneroWallet_default, { isWalletInitialized: moneroWalletInitialized }),
+        /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("div", { style: {
           marginTop: "20px",
           padding: "10px",
           backgroundColor: "#e7f3ff",
@@ -56172,10 +56807,10 @@ ${prettyStateOverride(stateOverride)}`;
           fontSize: "12px",
           color: "#0c5460"
         }, children: [
-          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("strong", { children: "Security Notice:" }),
+          /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("strong", { children: "Security Notice:" }),
           " This is a Proof of Concept. Do not use with real funds."
         ] }),
-        walletInfo && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { style: { textAlign: "center", marginTop: "8px" }, children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
+        walletInfo && /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("div", { style: { textAlign: "center", marginTop: "8px" }, children: /* @__PURE__ */ (0, import_jsx_runtime2.jsx)(
           "span",
           {
             onClick: clearWallet,
@@ -56200,15 +56835,16 @@ ${prettyStateOverride(stateOverride)}`;
       ] })
     ] });
   }
-  var import_react2, import_jsx_runtime, keyframes, injectKeyframes;
+  var import_react3, import_jsx_runtime2, keyframes, injectKeyframes;
   var init_App = __esm({
     "src/popup/App.tsx"() {
       "use strict";
-      import_react2 = __toESM(require_react());
+      import_react3 = __toESM(require_react());
       init_lib2();
       init_useCCIPTransfer();
       init_ccipChains();
-      import_jsx_runtime = __toESM(require_jsx_runtime());
+      init_MoneroWallet();
+      import_jsx_runtime2 = __toESM(require_jsx_runtime());
       keyframes = {
         float: `
     @keyframes float {
@@ -56250,13 +56886,13 @@ ${prettyStateOverride(stateOverride)}`;
     "src/popup/index.tsx"() {
       var import_client = __toESM(require_client());
       init_App();
-      var import_jsx_runtime2 = __toESM(require_jsx_runtime());
+      var import_jsx_runtime3 = __toESM(require_jsx_runtime());
       var container = document.getElementById("root");
       if (!container) {
         throw new Error("Root element not found");
       }
       var root = import_client.default.createRoot(container);
-      root.render(/* @__PURE__ */ (0, import_jsx_runtime2.jsx)(App, {}));
+      root.render(/* @__PURE__ */ (0, import_jsx_runtime3.jsx)(App, {}));
     }
   });
   require_popup();

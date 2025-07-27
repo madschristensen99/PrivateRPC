@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { ethers } from 'ethers';
 import { useCCIPTransfer } from '../hooks/useCCIPTransfer';
 import { CCIPSupportedChainId, CCIP_CHAIN_ID_TO_NAME } from '../lib/ccipChains';
+import MoneroWallet from './MoneroWallet';
 
 // Define CSS keyframes for animations
 const keyframes = {
@@ -74,6 +75,7 @@ interface SessionAddress {
 export default function App() {
   const [mnemonic, setMnemonic] = useState('');
   const [walletInfo, setWalletInfo] = useState<WalletInfo | null>(null);
+  const [moneroWalletInitialized, setMoneroWalletInitialized] = useState(false);
   const [pendingTransactions, setPendingTransactions] = useState<PendingTransaction[]>([]);
   const [isImporting, setIsImporting] = useState(false);
   const [error, setError] = useState('');
@@ -117,6 +119,7 @@ export default function App() {
     loadAddressSpoofing();
     loadMasterBalance();
     loadPoolBalance();
+    checkMoneroWalletStatus();
     
     // Poll for transaction progress updates
     const progressInterval = setInterval(loadTransactionProgress, 1000);
@@ -230,14 +233,24 @@ export default function App() {
   const loadExistingWallet = async () => {
     try {
       const response = await chrome.runtime.sendMessage({ type: 'getWalletInfo' });
-      if (response && !response.error) {
+      if (response && response.masterAddress) {
         setWalletInfo(response);
-        // Reload balance when wallet info changes
-        loadMasterBalance();
+        loadPendingTransactions();
+        loadSessionAddresses();
       }
-      await loadPendingTransactions();
     } catch (err) {
-      console.error('Error loading wallet:', err);
+      console.error('Error loading wallet info:', err);
+    }
+  };
+
+  const checkMoneroWalletStatus = async () => {
+    try {
+      const response = await chrome.runtime.sendMessage({ type: 'getMoneroWalletStatus' });
+      if (response && !response.error) {
+        setMoneroWalletInitialized(response.initialized);
+      }
+    } catch (err) {
+      console.error('Error checking Monero wallet status:', err);
     }
   };
 
@@ -273,49 +286,35 @@ export default function App() {
   };
 
   const importWallet = async () => {
-    if (!mnemonic.trim()) {
-      setError('Please enter a seed phrase');
-      return;
-    }
-
     setIsImporting(true);
     setError('');
-
+    
     try {
+      // Validate mnemonic
+      if (!mnemonic.trim()) {
+        setError('Please enter a seed phrase');
+        setIsImporting(false);
+        return;
+      }
+      
       const response = await chrome.runtime.sendMessage({
         type: 'importWallet',
         seedPhrase: mnemonic.trim()
       });
-
+      
       if (response.error) {
         setError(response.error);
       } else {
-        setWalletInfo({
-          masterAddress: response.masterAddress,
-          currentSessionAddress: null,
-          sessionCount: 0
-        });
+        // Wallet imported successfully
         setMnemonic('');
-        setError('');
+        loadExistingWallet();
         
-        // Load balances and check if we should show deposit suggestion
-        const masterBalanceResponse = await chrome.runtime.sendMessage({ type: 'getMasterBalance' });
-        const poolBalanceResponse = await chrome.runtime.sendMessage({ type: 'getPoolBalance' });
+        // Check Monero wallet status after import
+        setTimeout(checkMoneroWalletStatus, 1000);
         
-        if (masterBalanceResponse && !masterBalanceResponse.error) {
-          setMasterBalance(masterBalanceResponse.balance);
-        }
-        if (poolBalanceResponse && !poolBalanceResponse.error) {
-          setPoolBalance(poolBalanceResponse.balance);
-        }
-        
-        // Show deposit suggestion if user has no funds in pool but has wallet balance
-        const poolBalanceNum = parseFloat(poolBalanceResponse?.balance || '0');
-        const masterBalanceNum = parseFloat(masterBalanceResponse?.balance || '0');
-        
-        if (poolBalanceNum === 0 && masterBalanceNum > 0) {
-          setShowDepositSuggestion(true);
-        }
+        // Load balances
+        loadMasterBalance();
+        loadPoolBalance();
       }
     } catch (err) {
       setError('Invalid seed phrase');
@@ -1463,6 +1462,11 @@ const renderLoadingSpinner = () => (
           </div>
           
         </div>
+      )}
+      
+      {/* Monero Wallet Component */}
+      {walletInfo && (
+        <MoneroWallet isWalletInitialized={moneroWalletInitialized} />
       )}
       
       <div style={{ 

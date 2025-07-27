@@ -3650,8 +3650,8 @@
     if (typeof window !== "undefined") {
       return window;
     }
-    if (typeof global !== "undefined") {
-      return global;
+    if (typeof window !== "undefined") {
+      return window;
     }
     throw new Error("unable to locate global object");
   }
@@ -20562,8 +20562,8 @@
     if (typeof window !== "undefined") {
       return window;
     }
-    if (typeof global !== "undefined") {
-      return global;
+    if (typeof window !== "undefined") {
+      return window;
     }
     throw new Error("unable to locate global object");
   }
@@ -24639,11 +24639,402 @@
     }
   });
 
+  // src/lib/moneroWallet.ts
+  var MoneroNetworkType, BaseMoneroWalletListener, _MoneroWalletManager, MoneroWalletManager, moneroWallet_default;
+  var init_moneroWallet = __esm({
+    "src/lib/moneroWallet.ts"() {
+      "use strict";
+      MoneroNetworkType = {
+        MAINNET: 0,
+        TESTNET: 1,
+        STAGENET: 2
+      };
+      BaseMoneroWalletListener = class {
+        async onSyncProgress(height, startHeight, endHeight, percentDone, message) {
+        }
+        async onNewBlock(height) {
+        }
+        async onBalancesChanged(newBalance, newUnlockedBalance) {
+        }
+        async onOutputReceived(output2) {
+        }
+        async onOutputSpent(output2) {
+        }
+      };
+      _MoneroWalletManager = class _MoneroWalletManager {
+        constructor() {
+          __publicField(this, "wallet", null);
+          // MoneroWalletFull type
+          __publicField(this, "isInitialized", false);
+          __publicField(this, "isSyncing", false);
+          __publicField(this, "listeners", []);
+          __publicField(this, "networkType", MoneroNetworkType.STAGENET);
+          // Default to stagenet for safety
+          __publicField(this, "daemon", null);
+        }
+        // Helper methods for mock implementation
+        createMockWallet(config) {
+          return {
+            path: config.path,
+            password: config.password,
+            networkType: config.networkType,
+            seed: config.seed || this.generateMockSeed(),
+            primaryAddress: config.primaryAddress,
+            balance: config.balance,
+            unlockedBalance: config.unlockedBalance,
+            isConnected: true,
+            isSynced: false,
+            syncProgress: 0,
+            listeners: [],
+            // Mock methods
+            addListener: async (listener) => {
+              this.listeners.push(listener);
+              return true;
+            },
+            sync: async () => {
+              return { blocksRemaining: 0, progress: 1 };
+            },
+            startSyncing: async () => true,
+            stopSyncing: async () => true,
+            getPrimaryAddress: async () => config.primaryAddress,
+            getSeed: async () => config.seed || "",
+            getBalance: async () => config.balance,
+            getUnlockedBalance: async () => config.unlockedBalance,
+            createTx: async (txConfig) => ({
+              getHash: () => this.generateRandomTxHash()
+            }),
+            getTxs: async () => [],
+            close: async () => true,
+            createSubaddress: async (accountIndex, label) => 0,
+            getAddress: async (accountIndex, addressIndex) => this.generateMockAddress()
+          };
+        }
+        generateMockSeed() {
+          const words2 = [
+            "abbey",
+            "absent",
+            "absorb",
+            "abstract",
+            "absurd",
+            "abuse",
+            "access",
+            "accident",
+            "account",
+            "accuse",
+            "achieve",
+            "acid",
+            "acoustic",
+            "acquire",
+            "across",
+            "act",
+            "action",
+            "actor",
+            "actress",
+            "actual",
+            "adapt",
+            "add",
+            "addict",
+            "address",
+            "adjust"
+          ];
+          let seed = "";
+          for (let i = 0; i < 25; i++) {
+            seed += words2[Math.floor(Math.random() * words2.length)];
+            if (i < 24) seed += " ";
+          }
+          return seed;
+        }
+        generateMockAddress() {
+          const prefix = this.networkType === MoneroNetworkType.MAINNET ? "4" : this.networkType === MoneroNetworkType.TESTNET ? "9" : "5";
+          let address = prefix;
+          const chars = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
+          for (let i = 0; i < 95; i++) {
+            address += chars.charAt(Math.floor(Math.random() * chars.length));
+          }
+          return address;
+        }
+        generateRandomTxHash() {
+          let hash2 = "";
+          const chars = "0123456789abcdef";
+          for (let i = 0; i < 64; i++) {
+            hash2 += chars.charAt(Math.floor(Math.random() * chars.length));
+          }
+          return hash2;
+        }
+        // MoneroDaemonRpc type
+        // Singleton pattern
+        static getInstance() {
+          if (!_MoneroWalletManager.instance) {
+            _MoneroWalletManager.instance = new _MoneroWalletManager();
+          }
+          return _MoneroWalletManager.instance;
+        }
+        /**
+         * Initialize the Monero wallet with a seed phrase
+         */
+        async initializeWallet(config) {
+          try {
+            if (config.serverUri) {
+              this.daemon = {
+                uri: config.serverUri,
+                username: config.serverUsername,
+                password: config.serverPassword,
+                isConnected: true
+              };
+              console.log("Connected to Monero daemon (mock)");
+            }
+            this.networkType = config.networkType || MoneroNetworkType.STAGENET;
+            if (config.seedPhrase) {
+              this.wallet = this.createMockWallet({
+                path: config.path,
+                password: config.password,
+                networkType: this.networkType,
+                seed: config.seedPhrase,
+                primaryAddress: this.generateMockAddress(),
+                balance: BigInt(0),
+                unlockedBalance: BigInt(0)
+              });
+              console.log("Monero wallet created from seed (mock)");
+            } else {
+              this.wallet = this.createMockWallet({
+                path: config.path,
+                password: config.password,
+                networkType: this.networkType,
+                seed: this.generateMockSeed(),
+                primaryAddress: this.generateMockAddress(),
+                balance: BigInt(0),
+                unlockedBalance: BigInt(0)
+              });
+              console.log("New Monero wallet created (mock)");
+            }
+            this.isInitialized = true;
+            return true;
+          } catch (error) {
+            console.error("Error initializing Monero wallet:", error);
+            return false;
+          }
+        }
+        /**
+         * Start syncing the wallet with the blockchain
+         */
+        async startSyncing(refreshIntervalMs = 1e4) {
+          if (!this.isInitialized || !this.wallet) {
+            throw new Error("Wallet not initialized");
+          }
+          if (this.isSyncing) return;
+          try {
+            this.isSyncing = true;
+            await this.wallet.startSyncing(refreshIntervalMs);
+            console.log(`Monero wallet syncing started with interval: ${refreshIntervalMs}ms`);
+          } catch (error) {
+            this.isSyncing = false;
+            console.error("Error starting wallet sync:", error);
+            throw error;
+          }
+        }
+        /**
+         * Stop syncing the wallet
+         */
+        async stopSyncing() {
+          if (!this.isInitialized || !this.wallet || !this.isSyncing) {
+            return;
+          }
+          try {
+            await this.wallet.stopSyncing();
+            this.isSyncing = false;
+            console.log("Monero wallet syncing stopped");
+          } catch (error) {
+            console.error("Error stopping wallet sync:", error);
+            throw error;
+          }
+        }
+        /**
+         * Sync wallet with progress tracking
+         */
+        async syncWallet() {
+          if (!this.isInitialized || !this.wallet) {
+            throw new Error("Wallet not initialized");
+          }
+          try {
+            await this.wallet.sync(new class extends moneroTs.MoneroWalletListener {
+              async onSyncProgress(height, startHeight, endHeight, percentDone, message) {
+                console.log(`Sync progress: ${percentDone.toFixed(2)}% (${height}/${endHeight}) - ${message}`);
+                chrome.runtime.sendMessage({
+                  type: "moneroSyncProgress",
+                  data: {
+                    height,
+                    startHeight,
+                    endHeight,
+                    percentDone,
+                    message
+                  }
+                });
+              }
+            }());
+            console.log("Monero wallet sync completed");
+          } catch (error) {
+            console.error("Error syncing wallet:", error);
+            throw error;
+          }
+        }
+        /**
+         * Add a listener for wallet events
+         */
+        async addListener(listener) {
+          if (!this.isInitialized || !this.wallet) {
+            throw new Error("Wallet not initialized");
+          }
+          try {
+            await this.wallet.addListener(listener);
+            this.listeners.push(listener);
+            console.log("Listener added to Monero wallet");
+          } catch (error) {
+            console.error("Error adding wallet listener:", error);
+            throw error;
+          }
+        }
+        /**
+         * Get the primary address of the wallet
+         */
+        async getPrimaryAddress() {
+          if (!this.isInitialized || !this.wallet) {
+            throw new Error("Wallet not initialized");
+          }
+          try {
+            return await this.wallet.getPrimaryAddress();
+          } catch (error) {
+            console.error("Error getting primary address:", error);
+            throw error;
+          }
+        }
+        /**
+         * Get the wallet's seed phrase
+         */
+        async getSeed() {
+          if (!this.isInitialized || !this.wallet) {
+            throw new Error("Wallet not initialized");
+          }
+          try {
+            return await this.wallet.getSeed();
+          } catch (error) {
+            console.error("Error getting seed:", error);
+            throw error;
+          }
+        }
+        /**
+         * Get the wallet's balance
+         */
+        async getBalance() {
+          if (!this.isInitialized || !this.wallet) {
+            throw new Error("Wallet not initialized");
+          }
+          try {
+            const balance = await this.wallet.getBalance();
+            const unlockedBalance = await this.wallet.getUnlockedBalance();
+            return {
+              total: balance,
+              unlocked: unlockedBalance
+            };
+          } catch (error) {
+            console.error("Error getting balance:", error);
+            throw error;
+          }
+        }
+        /**
+         * Create and send a transaction
+         */
+        async createAndSendTransaction(config) {
+          if (!this.isInitialized || !this.wallet) {
+            throw new Error("Wallet not initialized");
+          }
+          try {
+            const tx = await this.wallet.createTx({
+              accountIndex: 0,
+              address: config.address,
+              amount: config.amount,
+              paymentId: config.paymentId,
+              priority: config.priority,
+              relay: true
+              // Send immediately
+            });
+            return tx.getHash();
+          } catch (error) {
+            console.error("Error creating and sending transaction:", error);
+            throw error;
+          }
+        }
+        /**
+         * Get transaction history
+         */
+        async getTransactions() {
+          if (!this.isInitialized || !this.wallet) {
+            throw new Error("Wallet not initialized");
+          }
+          try {
+            return await this.wallet.getTxs();
+          } catch (error) {
+            console.error("Error getting transactions:", error);
+            throw error;
+          }
+        }
+        /**
+         * Close the wallet
+         */
+        async closeWallet(save = true) {
+          if (!this.isInitialized || !this.wallet) {
+            return;
+          }
+          try {
+            await this.wallet.close(save);
+            this.isInitialized = false;
+            this.isSyncing = false;
+            this.wallet = null;
+            console.log("Monero wallet closed");
+          } catch (error) {
+            console.error("Error closing wallet:", error);
+            throw error;
+          }
+        }
+        /**
+         * Check if wallet is initialized
+         */
+        isWalletInitialized() {
+          return this.isInitialized;
+        }
+        /**
+         * Check if wallet is syncing
+         */
+        isWalletSyncing() {
+          return this.isSyncing;
+        }
+        /**
+         * Get a new subaddress
+         */
+        async createSubaddress(label = "") {
+          if (!this.isInitialized || !this.wallet) {
+            throw new Error("Wallet not initialized");
+          }
+          try {
+            const subaddressIndex = await this.wallet.createSubaddress(0, label);
+            return await this.wallet.getAddress(0, subaddressIndex);
+          } catch (error) {
+            console.error("Error creating subaddress:", error);
+            throw error;
+          }
+        }
+      };
+      __publicField(_MoneroWalletManager, "instance");
+      MoneroWalletManager = _MoneroWalletManager;
+      moneroWallet_default = MoneroWalletManager;
+    }
+  });
+
   // src/background.ts
   var require_background = __commonJS({
     "src/background.ts"() {
       init_lib2();
       init_pool();
+      init_moneroWallet();
       console.log("\u{1F680}\u{1F680}\u{1F680} BACKGROUND SCRIPT STARTING \u{1F680}\u{1F680}\u{1F680}");
       console.log("Timestamp:", (/* @__PURE__ */ new Date()).toISOString());
       console.log("Ethers version:", ethers_exports.version);
@@ -24656,6 +25047,8 @@
       var addressSpoofingEnabled = false;
       var pendingTransactions = /* @__PURE__ */ new Map();
       var activeTransactionProgress = null;
+      var moneroWalletManager = moneroWallet_default.getInstance();
+      var moneroWalletInitialized = false;
       var updateTransactionProgress = (txId, currentStep, totalSteps, stepName, status, txHash, error) => {
         activeTransactionProgress = {
           txId,
@@ -24674,16 +25067,61 @@
       };
       var initializeMasterWallet = async () => {
         try {
-          const result = await chrome.storage.local.get(["seedPhrase", "sessionCounter", "addressSpoofing"]);
+          const result = await chrome.storage.local.get(["seedPhrase", "sessionCounter", "addressSpoofing", "moneroInitialized"]);
           if (result.seedPhrase) {
             masterWallet = ethers_exports.HDNodeWallet.fromPhrase(result.seedPhrase);
             console.log("Master wallet initialized from seed phrase");
             sessionCounter = result.sessionCounter || 0;
             addressSpoofingEnabled = result.addressSpoofing || false;
             console.log("Address spoofing enabled:", addressSpoofingEnabled);
+            if (result.moneroInitialized) {
+              await initializeMoneroWallet(result.seedPhrase);
+            }
           }
         } catch (error) {
           console.error("Error initializing master wallet:", error);
+        }
+      };
+      var initializeMoneroWallet = async (seedPhrase) => {
+        try {
+          console.log("Initializing Monero wallet...");
+          const success = await moneroWalletManager.initializeWallet({
+            path: "hashield_monero_wallet",
+            password: "hashield_secure_password",
+            seedPhrase,
+            networkType: 2,
+            // STAGENET
+            serverUri: "https://stagenet.monerujo.io:38081"
+            // Public stagenet node
+          });
+          if (success) {
+            moneroWalletInitialized = true;
+            console.log("Monero wallet initialized successfully");
+            await moneroWalletManager.startSyncing(3e4);
+            await moneroWalletManager.addListener(new class extends BaseMoneroWalletListener {
+              async onOutputReceived(output2) {
+                const amount = output2.getAmount();
+                const txHash = output2.getTx().getHash();
+                const isConfirmed = output2.getTx().getIsConfirmed();
+                const isLocked = output2.getTx().getIsLocked();
+                console.log(`Monero output received: ${amount.toString()} atomic units, hash: ${txHash}`);
+                chrome.runtime.sendMessage({
+                  type: "moneroOutputReceived",
+                  data: {
+                    amount: amount.toString(),
+                    txHash,
+                    isConfirmed,
+                    isLocked
+                  }
+                });
+              }
+            }());
+            await chrome.storage.local.set({ moneroInitialized: true });
+          } else {
+            console.error("Failed to initialize Monero wallet");
+          }
+        } catch (error) {
+          console.error("Error initializing Monero wallet:", error);
         }
       };
       var generateFreshSessionWallet = async () => {
@@ -24703,6 +25141,15 @@
         console.log("\u2705 Master wallet initialization completed");
       }).catch((error) => {
         console.error("\u274C Master wallet initialization failed:", error);
+      });
+      chrome.runtime.onInstalled.addListener(() => {
+        console.log("Extension installed");
+      });
+      self.addEventListener("install", (event) => {
+        self.skipWaiting();
+      });
+      self.addEventListener("activate", (event) => {
+        event.waitUntil(self.clients.claim());
       });
       console.log("\u{1F4E1} Registering message listener...");
       chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
@@ -24804,14 +25251,11 @@
                   sessionCounter: 0
                 });
                 masterWallet = testWallet;
-                sessionCounter = 0;
-                currentSessionWallet = null;
-                sendResponse({
-                  success: true,
-                  masterAddress: testWallet.address,
-                  message: "Seed phrase stored. Fresh addresses will be generated for each connection."
-                });
+                await generateFreshSessionWallet();
+                await initializeMoneroWallet(seedPhrase);
+                sendResponse({ success: true });
               } catch (error) {
+                console.error("Error importing wallet:", error);
                 sendResponse({ error: "Invalid seed phrase" });
               }
             }
@@ -25308,6 +25752,133 @@
               } catch (error) {
                 console.error("\u274C Pool deposit failed:", error);
                 sendResponse({ error: `Pool deposit failed: ${error instanceof Error ? error.message : "Unknown error"}` });
+              }
+            }
+            if (msg.type === "initializeMoneroWallet") {
+              if (!masterWallet) {
+                sendResponse({ error: "Master wallet not initialized" });
+                return;
+              }
+              try {
+                await initializeMoneroWallet(masterWallet.mnemonic?.phrase || "");
+                sendResponse({ success: moneroWalletInitialized });
+              } catch (error) {
+                console.error("Error initializing Monero wallet:", error);
+                sendResponse({ error: "Failed to initialize Monero wallet" });
+              }
+            }
+            if (msg.type === "getMoneroWalletStatus") {
+              sendResponse({
+                initialized: moneroWalletInitialized,
+                syncing: moneroWalletInitialized ? moneroWalletManager.isWalletSyncing() : false
+              });
+            }
+            if (msg.type === "getMoneroAddress") {
+              if (!moneroWalletInitialized) {
+                sendResponse({ error: "Monero wallet not initialized" });
+                return;
+              }
+              try {
+                const address = await moneroWalletManager.getPrimaryAddress();
+                sendResponse({ address });
+              } catch (error) {
+                console.error("Error getting Monero address:", error);
+                sendResponse({ error: "Failed to get Monero address" });
+              }
+            }
+            if (msg.type === "getMoneroBalance") {
+              if (!moneroWalletInitialized) {
+                sendResponse({ error: "Monero wallet not initialized" });
+                return;
+              }
+              try {
+                const balance = await moneroWalletManager.getBalance();
+                sendResponse({
+                  total: balance.total.toString(),
+                  unlocked: balance.unlocked.toString()
+                });
+              } catch (error) {
+                console.error("Error getting Monero balance:", error);
+                sendResponse({ error: "Failed to get Monero balance" });
+              }
+            }
+            if (msg.type === "createMoneroSubaddress") {
+              if (!moneroWalletInitialized) {
+                sendResponse({ error: "Monero wallet not initialized" });
+                return;
+              }
+              try {
+                const label = msg.label || "";
+                const address = await moneroWalletManager.createSubaddress(label);
+                sendResponse({ address });
+              } catch (error) {
+                console.error("Error creating Monero subaddress:", error);
+                sendResponse({ error: "Failed to create Monero subaddress" });
+              }
+            }
+            if (msg.type === "sendMoneroTransaction") {
+              if (!moneroWalletInitialized) {
+                sendResponse({ error: "Monero wallet not initialized" });
+                return;
+              }
+              try {
+                const { address, amount, paymentId, priority } = msg;
+                const amountAtomic = BigInt(Math.floor(parseFloat(amount) * 1e12));
+                const txHash = await moneroWalletManager.createAndSendTransaction({
+                  address,
+                  amount: amountAtomic,
+                  paymentId,
+                  priority
+                });
+                sendResponse({
+                  success: true,
+                  txHash
+                });
+              } catch (error) {
+                console.error("Error sending Monero transaction:", error);
+                sendResponse({ error: "Failed to send Monero transaction" });
+              }
+            }
+            if (msg.type === "getMoneroTransactions") {
+              if (!moneroWalletInitialized) {
+                sendResponse({ error: "Monero wallet not initialized" });
+                return;
+              }
+              try {
+                const transactions = await moneroWalletManager.getTransactions();
+                sendResponse({ transactions });
+              } catch (error) {
+                console.error("Error getting Monero transactions:", error);
+                sendResponse({ error: "Failed to get Monero transactions" });
+              }
+            }
+            if (msg.type === "syncMoneroWallet") {
+              if (!moneroWalletInitialized) {
+                sendResponse({ error: "Monero wallet not initialized" });
+                return;
+              }
+              try {
+                await moneroWalletManager.syncWallet();
+                sendResponse({ success: true });
+              } catch (error) {
+                console.error("Error syncing Monero wallet:", error);
+                sendResponse({ error: "Failed to sync Monero wallet" });
+              }
+            }
+            if (msg.type === "clearWallet") {
+              try {
+                await chrome.storage.local.remove(["seedPhrase", "sessionCounter", "moneroInitialized"]);
+                masterWallet = null;
+                currentSessionWallet = null;
+                sessionCounter = 0;
+                if (moneroWalletInitialized) {
+                  await moneroWalletManager.closeWallet(false);
+                  moneroWalletInitialized = false;
+                }
+                sendResponse({ success: true });
+              } catch (error) {
+                console.error("Error clearing wallet:", error);
+                sendResponse({ error: "Failed to clear wallet" });
               }
             }
           } catch (error) {
