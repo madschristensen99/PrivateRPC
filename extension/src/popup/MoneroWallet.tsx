@@ -316,14 +316,14 @@ const MoneroWallet: React.FC<MoneroWalletProps> = ({ isWalletInitialized }) => {
           width: '24px', 
           height: '24px', 
           borderRadius: '50%', 
-          backgroundColor: '#FF6600',
+          backgroundColor: '#4c4c4c',
           color: 'white',
           textAlign: 'center',
           lineHeight: '24px',
           fontSize: '16px',
           fontWeight: 'bold'
         }}>
-          ₿
+          ₼
         </span>
         Monero Wallet
       </h3>
@@ -337,12 +337,15 @@ const MoneroWallet: React.FC<MoneroWalletProps> = ({ isWalletInitialized }) => {
           <div style={{ color: '#dc3545', fontSize: '12px', marginTop: '5px' }}>{address.error}</div>
         ) : (
           <div style={{ 
-            backgroundColor: '#e9ecef', 
+            backgroundColor: '#ffffff', 
             padding: '8px', 
             borderRadius: '4px',
             fontSize: '12px',
             wordBreak: 'break-all',
-            position: 'relative'
+            position: 'relative',
+            border: '1px solid #ced4da',
+            color: '#212529',
+            fontFamily: 'monospace'
           }}>
             {address.address}
             <button

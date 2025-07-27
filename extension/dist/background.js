@@ -25091,7 +25091,7 @@
             seedPhrase,
             networkType: 2,
             // STAGENET
-            serverUri: "https://stagenet.monerujo.io:38081"
+            serverUri: "https://stagenet.xmr.ditatompel.com"
             // Public stagenet node
           });
           if (success) {

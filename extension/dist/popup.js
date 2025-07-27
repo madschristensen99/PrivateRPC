@@ -55117,24 +55117,27 @@ ${prettyStateOverride(stateOverride)}`;
               width: "24px",
               height: "24px",
               borderRadius: "50%",
-              backgroundColor: "#FF6600",
+              backgroundColor: "#4c4c4c",
               color: "white",
               textAlign: "center",
               lineHeight: "24px",
               fontSize: "16px",
               fontWeight: "bold"
-            }, children: "\u20BF" }),
+            }, children: "\u20BC" }),
             "Monero Wallet"
           ] }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { style: { marginBottom: "15px" }, children: [
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("h4", { style: { fontSize: "14px", color: "#495057", marginBottom: "5px" }, children: "Your Address:" }),
             address.loading ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { style: { textAlign: "center", padding: "10px" }, children: "Loading..." }) : address.error ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { style: { color: "#dc3545", fontSize: "12px", marginTop: "5px" }, children: address.error }) : /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { style: {
-              backgroundColor: "#e9ecef",
+              backgroundColor: "#ffffff",
               padding: "8px",
               borderRadius: "4px",
               fontSize: "12px",
               wordBreak: "break-all",
-              position: "relative"
+              position: "relative",
+              border: "1px solid #ced4da",
+              color: "#212529",
+              fontFamily: "monospace"
             }, children: [
               address.address,
               /* @__PURE__ */ (0, import_jsx_runtime.jsx)(

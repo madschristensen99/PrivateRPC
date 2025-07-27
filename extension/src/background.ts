@@ -91,7 +91,7 @@ const initializeMoneroWallet = async (seedPhrase: string) => {
       password: 'hashield_secure_password',
       seedPhrase: seedPhrase,
       networkType: 2, // STAGENET
-      serverUri: 'https://stagenet.monerujo.io:38081' // Public stagenet node
+      serverUri: 'https://stagenet.xmr.ditatompel.com' // Public stagenet node
     });
     
     if (success) {
