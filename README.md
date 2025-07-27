@@ -1,10 +1,10 @@
-# 🛡️ Hashield: EVM ↔ Monero Atomic Swap System
+# 🛡️ Hashield: Fully Noncompliant Web3 Browsing
 
-A secure, modular implementation for trustless atomic swaps between EVM chains (Ethereum, Base, etc.) and Monero. Built on a robust escrow system with adapter-based architecture for maximum flexibility and security.
+Web3 wallet extension build on a secure, modular implementation for trustless atomic swaps between EVM chains (Ethereum, Base, etc.) and Monero. Built on 1Inch's escrow interface with adapter-based architecture for maximum flexibility and security.
 
 ## 🏗️ Architecture Overview
 
-This system implements **Hash Time Locked Contracts (HTLCs)** to enable atomic swaps between EVM chains and Monero:
+This system implements **Adapter Signatures** to enable atomic swaps between EVM chains and Monero:
 
 - **EVM Side**: Smart contracts with deterministic factory deployment and adapter pattern
 - **Monero Side**: Native Monero cryptographic primitives for secure transactions
@@ -19,9 +19,10 @@ This system implements **Hash Time Locked Contracts (HTLCs)** to enable atomic s
 
 ### Smart Contracts (EVM)
 - `XMREscrowFactory`: Creates escrow contracts using deterministic deployment (Create2)
-- `XMREscrowSrc`: Source escrow for EVM→XMR swaps
-- `XMREscrowDst`: Destination escrow for XMR→EVM swaps
+- `XMREscrowSrc`: Source escrow for XMR→EVM swaps
+- `XMREscrowDst`: Destination escrow for EVM→XMR swaps
 - `XMRSwapAdapter`: Adapter contract connecting escrows with the SwapCreator
+- `SwapCreator`: Existing implementation of ETH-XMR atomic swap contract
 - **Deployed on Base Sepolia**: Check deployment files for latest addresses
 
 ### Key Features
