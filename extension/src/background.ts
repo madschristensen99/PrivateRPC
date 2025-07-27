@@ -293,6 +293,7 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
       if (msg.type === 'importWallet') {
         const { seedPhrase } = msg;
         try {
+          console.log('Importing wallet with seed phrase...');
           // Validate seed phrase by creating wallet
           const testWallet = ethers.HDNodeWallet.fromPhrase(seedPhrase);
           
@@ -311,7 +312,20 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
           // Initialize Monero wallet with the same seed
           await initializeMoneroWallet(seedPhrase);
           
-          sendResponse({ success: true });
+          // Explicitly set moneroInitialized flag
+          moneroWalletInitialized = true;
+          await chrome.storage.local.set({ moneroInitialized: true });
+          
+          // Create wallet info response
+          const walletInfo = {
+            masterAddress: masterWallet.address,
+            currentSessionAddress: currentSessionWallet?.address || null,
+            sessionCount: sessionCounter,
+            moneroInitialized: true
+          };
+          
+          console.log('Wallet imported successfully:', walletInfo);
+          sendResponse({ success: true, walletInfo });
         } catch (error) {
           console.error('Error importing wallet:', error);
           sendResponse({ error: 'Invalid seed phrase' });

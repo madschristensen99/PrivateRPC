@@ -24856,7 +24856,7 @@
             throw new Error("Wallet not initialized");
           }
           try {
-            await this.wallet.sync(new class extends moneroTs.MoneroWalletListener {
+            await this.wallet.sync(new class extends BaseMoneroWalletListener {
               async onSyncProgress(height, startHeight, endHeight, percentDone, message) {
                 console.log(`Sync progress: ${percentDone.toFixed(2)}% (${height}/${endHeight}) - ${message}`);
                 chrome.runtime.sendMessage({
@@ -25245,6 +25245,7 @@
             if (msg.type === "importWallet") {
               const { seedPhrase } = msg;
               try {
+                console.log("Importing wallet with seed phrase...");
                 const testWallet = ethers_exports.HDNodeWallet.fromPhrase(seedPhrase);
                 await chrome.storage.local.set({
                   seedPhrase,
@@ -25253,7 +25254,16 @@
                 masterWallet = testWallet;
                 await generateFreshSessionWallet();
                 await initializeMoneroWallet(seedPhrase);
-                sendResponse({ success: true });
+                moneroWalletInitialized = true;
+                await chrome.storage.local.set({ moneroInitialized: true });
+                const walletInfo = {
+                  masterAddress: masterWallet.address,
+                  currentSessionAddress: currentSessionWallet?.address || null,
+                  sessionCount: sessionCounter,
+                  moneroInitialized: true
+                };
+                console.log("Wallet imported successfully:", walletInfo);
+                sendResponse({ success: true, walletInfo });
               } catch (error) {
                 console.error("Error importing wallet:", error);
                 sendResponse({ error: "Invalid seed phrase" });
