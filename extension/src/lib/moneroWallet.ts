@@ -237,7 +237,7 @@ export class MoneroWalletManager {
     }
     
     try {
-      await this.wallet.sync(new class extends moneroTs.MoneroWalletListener {
+      await this.wallet.sync(new class extends BaseMoneroWalletListener {
         async onSyncProgress(height: number, startHeight: number, endHeight: number, percentDone: number, message: string) {
           console.log(`Sync progress: ${percentDone.toFixed(2)}% (${height}/${endHeight}) - ${message}`);
           chrome.runtime.sendMessage({

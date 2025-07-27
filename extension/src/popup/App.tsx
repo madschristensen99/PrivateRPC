@@ -1,7 +1,5 @@
 import { useState, useEffect } from 'react';
 import { ethers } from 'ethers';
-import { useCCIPTransfer } from '../hooks/useCCIPTransfer';
-import { CCIPSupportedChainId, CCIP_CHAIN_ID_TO_NAME } from '../lib/ccipChains';
 import MoneroWallet from './MoneroWallet';
 
 // Define CSS keyframes for animations
@@ -96,19 +94,30 @@ export default function App() {
     txHash?: string;
     error?: string;
   } | null>(null);
-  const [paymentForm, setPaymentForm] = useState<{
-    destinationAddress: string;
-    amount: string;
-    destinationChain: CCIPSupportedChainId;
-    tokenType: "USDC" | "CCIP-BnM";
-  }>({
+  const [paymentForm, setPaymentForm] = useState({
     destinationAddress: '',
-    amount: '',
-    destinationChain: CCIPSupportedChainId.ETH_SEPOLIA,
-    tokenType: "USDC"
+    amount: ''
   });
   
-  const { currentStep, logs, error: transferError, messageId, executeCCIPTransfer, reset } = useCCIPTransfer();
+  // Monero transfer state management
+  const [transferState, setTransferState] = useState({
+    status: 'idle' as 'idle' | 'in-progress' | 'completed' | 'error',
+    step: 'idle' as 'idle' | 'initiating' | 'processing' | 'completed' | 'error',
+    logs: [] as string[],
+    error: null as string | null,
+    txHash: null as string | null
+  });
+  
+  const resetTransfer = () => {
+    // Reset transfer state
+    setTransferState({
+      status: 'idle',
+      step: 'idle',
+      logs: [],
+      error: null,
+      txHash: null
+    });
+  };
 
   useEffect(() => {
     // Inject our animation keyframes
@@ -862,36 +871,7 @@ const renderLoadingSpinner = () => (
                   </span>
                 </div>
 
-                <div style={{ marginBottom: '12px' }}>
-                  <label style={{ 
-                    display: 'block', 
-                    marginBottom: '4px', 
-                    fontSize: '12px', 
-                    color: '#666',
-                    fontWeight: '500'
-                  }}>
-                    Token Type
-                  </label>
-                  <select
-                    value={paymentForm.tokenType}
-                    onChange={(e) => setPaymentForm({
-                      ...paymentForm,
-                      tokenType: e.target.value as "USDC" | "CCIP-BnM"
-                    })}
-                    style={{
-                      width: '100%',
-                      padding: '8px 10px',
-                      border: '1px solid #ddd',
-                      borderRadius: '4px',
-                      fontSize: '12px',
-                      backgroundColor: 'white',
-                      boxSizing: 'border-box'
-                    }}
-                  >
-                    <option value="USDC">USDC</option>
-                    <option value="CCIP-BnM">CCIP-BnM (Test Token)</option>
-                  </select>
-                </div>
+                {/* Using Monero for transfers instead of tokens */}
 
                 <div style={{ marginBottom: '12px' }}>
                   <label style={{ 
@@ -931,7 +911,7 @@ const renderLoadingSpinner = () => (
                     color: '#666',
                     fontWeight: '500'
                   }}>
-                    Amount ({paymentForm.tokenType})
+                    Amount (XMR)
                   </label>
                   <input
                     type="number"
@@ -954,40 +934,7 @@ const renderLoadingSpinner = () => (
                   />
                 </div>
 
-                <div style={{ marginBottom: '15px' }}>
-                  <label style={{ 
-                    display: 'block', 
-                    marginBottom: '4px', 
-                    fontSize: '12px', 
-                    color: '#666',
-                    fontWeight: '500'
-                  }}>
-                    Destination Chain
-                  </label>
-                  <select
-                    value={paymentForm.destinationChain}
-                    onChange={(e) => setPaymentForm({
-                      ...paymentForm,
-                      destinationChain: parseInt(e.target.value) as CCIPSupportedChainId
-                    })}
-                    style={{
-                      width: '100%',
-                      padding: '8px 10px',
-                      border: '1px solid #ddd',
-                      borderRadius: '4px',
-                      fontSize: '12px',
-                      backgroundColor: 'white',
-                      boxSizing: 'border-box'
-                    }}
-                  >
-                    <option value={CCIPSupportedChainId.ETH_SEPOLIA}>Ethereum Sepolia</option>
-                    <option value={CCIPSupportedChainId.BASE_SEPOLIA}>Base Sepolia</option>
-                    <option value={CCIPSupportedChainId.ARB_SEPOLIA}>Arbitrum Sepolia</option>
-                    <option value={CCIPSupportedChainId.AVAX_FUJI}>Avalanche Fuji</option>
-                    <option value={CCIPSupportedChainId.POLYGON_AMOY}>Polygon Amoy</option>
-                    <option value={CCIPSupportedChainId.RONIN_SAIGON}>Ronin Saigon</option>
-                  </select>
-                </div>
+                {/* Using Monero for transfers instead of cross-chain transfers */}
 
                 {!showPaymentOverview ? (
                   <button
@@ -1048,14 +995,14 @@ const renderLoadingSpinner = () => (
                       <div style={{ fontSize: '11px', marginBottom: '4px' }}>
                         <span style={{ color: '#6c757d' }}>Amount:</span>
                         <span style={{ marginLeft: '8px', fontWeight: '600' }}>
-                          {paymentForm.amount} {paymentForm.tokenType}
+                          {paymentForm.amount} XMR
                         </span>
                       </div>
                       
                       <div style={{ fontSize: '11px', marginBottom: '4px' }}>
-                        <span style={{ color: '#6c757d' }}>Chain:</span>
+                        <span style={{ color: '#6c757d' }}>Network:</span>
                         <span style={{ marginLeft: '8px' }}>
-                          {CCIP_CHAIN_ID_TO_NAME[paymentForm.destinationChain] || 'Unknown Chain'}
+                          Monero
                         </span>
                       </div>
                       
@@ -1118,45 +1065,79 @@ const renderLoadingSpinner = () => (
                               // Continue anyway, maybe the session has enough funds
                             }
                             
-                            // Execute the CCIP cross-chain transfer
-                            await executeCCIPTransfer(
-                              response.privateKey,
-                              CCIPSupportedChainId.ETH_SEPOLIA, // Source chain (assuming current session is on Sepolia)
-                              paymentForm.destinationChain,
-                              paymentForm.destinationAddress,
-                              paymentForm.amount,
-                              paymentForm.tokenType
-                            );
+                            // Execute the Monero transfer
+                            setTransferState({
+                              status: 'in-progress',
+                              step: 'initiating',
+                              logs: [...transferState.logs || [], 'Initiating Monero transfer...'],
+                              error: null,
+                              txHash: null
+                            });
+                            
+                            try {
+                              // Send message to background script to initiate Monero transaction
+                              chrome.runtime.sendMessage({
+                                type: 'sendMoneroTransaction',
+                                data: {
+                                  destinationAddress: paymentForm.destinationAddress,
+                                  amount: paymentForm.amount
+                                }
+                              }, (response) => {
+                                if (response.error) {
+                                  setTransferState(prev => ({
+                                    ...prev,
+                                    status: 'error',
+                                    step: 'error',
+                                    error: response.error
+                                  }));
+                                } else {
+                                  setTransferState(prev => ({
+                                    ...prev,
+                                    status: 'completed',
+                                    step: 'completed',
+                                    txHash: response.txHash
+                                  }));
+                                }
+                              });
+                            } catch (error: unknown) {
+                              const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+                              setTransferState(prev => ({
+                                ...prev,
+                                status: 'error',
+                                step: 'error',
+                                error: errorMessage
+                              }));
+                            }
                           } catch (error) {
                             console.error('Payment failed:', error);
                           }
                         }}
-                        disabled={currentStep !== 'idle' && currentStep !== 'completed' && currentStep !== 'error'}
+                        disabled={transferState.step !== 'idle' && transferState.step !== 'completed' && transferState.step !== 'error'}
                         style={{
                           flex: 1,
                           padding: '10px',
-                          backgroundColor: (currentStep !== 'idle' && currentStep !== 'completed' && currentStep !== 'error') ? '#6c757d' : '#28a745',
+                          backgroundColor: (transferState.step !== 'idle' && transferState.step !== 'completed' && transferState.step !== 'error') ? '#6c757d' : '#28a745',
                           color: 'white',
                           border: 'none',
                           borderRadius: '4px',
-                          cursor: (currentStep !== 'idle' && currentStep !== 'completed' && currentStep !== 'error') ? 'not-allowed' : 'pointer',
+                          cursor: (transferState.step !== 'idle' && transferState.step !== 'completed' && transferState.step !== 'error') ? 'not-allowed' : 'pointer',
                           fontSize: '13px',
                           fontWeight: '600'
                         }}
                         onMouseEnter={(e) => {
-                          if (currentStep === 'idle' || currentStep === 'completed' || currentStep === 'error') {
+                          if (transferState.step === 'idle' || transferState.step === 'completed' || transferState.step === 'error') {
                             e.currentTarget.style.backgroundColor = '#218838';
                           }
                         }}
                         onMouseLeave={(e) => {
-                          if (currentStep === 'idle' || currentStep === 'completed' || currentStep === 'error') {
+                          if (transferState.step === 'idle' || transferState.step === 'completed' || transferState.step === 'error') {
                             e.currentTarget.style.backgroundColor = '#28a745';
                           }
                         }}
                       >
-                        {currentStep === 'idle' ? 'Confirm Payment' : 
-                         currentStep === 'completed' ? 'Payment Complete' :
-                         currentStep === 'error' ? 'Retry Payment' :
+                        {transferState.step === 'idle' ? 'Confirm Payment' : 
+                         transferState.step === 'completed' ? 'Payment Complete' :
+                         transferState.step === 'error' ? 'Retry Payment' :
                          'Processing...'}
                       </button>
                     </div>
@@ -1164,27 +1145,27 @@ const renderLoadingSpinner = () => (
                 )}
 
                 {/* Payment Status Display */}
-                {(currentStep !== 'idle' || logs.length > 0) && (
+                {(transferState.step !== 'idle' || transferState.logs.length > 0) && (
                   <div style={{
                     marginTop: '15px',
                     padding: '12px',
-                    backgroundColor: currentStep === 'error' ? '#f8d7da' : '#e7f3ff',
-                    border: `1px solid ${currentStep === 'error' ? '#f5c6cb' : '#bee5eb'}`,
+                    backgroundColor: transferState.step === 'error' ? '#f8d7da' : '#e7f3ff',
+                    border: `1px solid ${transferState.step === 'error' ? '#f5c6cb' : '#bee5eb'}`,
                     borderRadius: '4px'
                   }}>
                     <h5 style={{ 
                       margin: '0 0 8px 0', 
                       fontSize: '12px', 
-                      color: currentStep === 'error' ? '#721c24' : '#0c5460',
+                      color: transferState.step === 'error' ? '#721c24' : '#0c5460',
                       display: 'flex',
                       justifyContent: 'space-between',
                       alignItems: 'center'
                     }}>
                       Payment Status
-                      {(currentStep === 'completed' || currentStep === 'error') && (
+                      {(transferState.step === 'completed' || transferState.step === 'error') && (
                         <button
                           onClick={() => {
-                            reset();
+                            resetTransfer();
                             setShowPaymentOverview(false);
                           }}
                           style={{
@@ -1204,20 +1185,18 @@ const renderLoadingSpinner = () => (
                     
                     <div style={{ 
                       fontSize: '11px', 
-                      color: currentStep === 'error' ? '#721c24' : '#0c5460',
+                      color: transferState.step === 'error' ? '#721c24' : '#0c5460',
                       marginBottom: '8px',
                       fontWeight: '600'
                     }}>
-                      Current Step: {currentStep === 'idle' ? 'Ready' : 
-                                   currentStep === 'approving-token' ? `Approving ${paymentForm.tokenType}` :
-                                   currentStep === 'estimating-fees' ? 'Estimating CCIP Fees' :
-                                   currentStep === 'transferring' ? 'Initiating CCIP Transfer' :
-                                   currentStep === 'waiting-confirmation' ? 'Waiting for Confirmation' :
-                                   currentStep === 'completed' ? '✅ Completed' :
-                                   currentStep === 'error' ? '❌ Error' : currentStep}
+                      Current Step: {transferState.step === 'idle' ? 'Ready' : 
+                                   transferState.step === 'initiating' ? 'Initiating Monero Transfer' :
+                                   transferState.step === 'processing' ? 'Processing Transaction' :
+                                   transferState.step === 'completed' ? '✅ Completed' :
+                                   transferState.step === 'error' ? '❌ Error' : transferState.step}
                     </div>
 
-                    {messageId && (
+                    {transferState.txHash && (
                       <div style={{
                         fontSize: '10px',
                         color: '#0c5460',
@@ -1228,14 +1207,14 @@ const renderLoadingSpinner = () => (
                         marginBottom: '8px',
                         wordBreak: 'break-all'
                       }}>
-                        <strong>CCIP Message ID:</strong><br />
-                        {messageId}
+                        <strong>Transaction Hash:</strong><br />
+                        {transferState.txHash}
                         <br />
-                        <small>Track on <a href={`https://ccip.chain.link/msg/${messageId}`} target="_blank" rel="noopener noreferrer" style={{color: '#007bff'}}>CCIP Explorer</a></small>
+                        <small>This is a mock transaction for demonstration purposes</small>
                       </div>
                     )}
 
-                    {transferError && (
+                    {transferState.error && (
                       <div style={{
                         fontSize: '10px',
                         color: '#721c24',
@@ -1245,11 +1224,11 @@ const renderLoadingSpinner = () => (
                         borderRadius: '3px',
                         marginBottom: '8px'
                       }}>
-                        Error: {transferError}
+                        Error: {transferState.error}
                       </div>
                     )}
 
-                    {logs.length > 0 && (
+                    {transferState.logs.length > 0 && (
                       <div style={{
                         maxHeight: '120px',
                         overflowY: 'auto',
@@ -1260,7 +1239,7 @@ const renderLoadingSpinner = () => (
                         borderRadius: '3px',
                         border: '1px solid rgba(0, 0, 0, 0.1)'
                       }}>
-                        {logs.map((log: string, index: number) => (
+                        {transferState.logs.map((log: string, index: number) => (
                           <div key={index} style={{ marginBottom: '2px', lineHeight: '1.2' }}>
                             {log}
                           </div>
