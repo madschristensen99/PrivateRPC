@@ -25,6 +25,23 @@ The microservice follows a modular architecture:
 - **Middleware**: Cross-cutting concerns like authentication and error handling
 - **Utils**: Shared utilities like logging
 
+## 🔐 Lit Protocol Integration
+
+This microservice integrates Lit Protocol to enhance the user experience for atomic swaps. While not strictly necessary for the atomic implementation itself, Lit Protocol automates Monero key management operations, particularly the claim step where funds are swept from the temporary wallet to the user's desired Monero address. This ensures compatibility with existing Web3 wallets that have no native support for Monero operations:
+
+- **Secure Key Generation**: Keys are generated within Lit Protocol's Trusted Execution Environment (TEE)
+- **One-Time Use**: Keys are programmatically restricted to be used only once for a specific transaction
+- **Access Control**: Keys are tied to specific user and transaction IDs
+- **No Key Exposure**: Private keys never leave the secure environment
+
+The `LitClient` class in `services/lit-client.ts` provides the following functionality:
+
+- Connect to Lit Protocol network
+- Generate one-time Monero keys tied to transaction and user IDs
+- Sign transactions using these keys within Lit's secure environment
+- Derive Monero addresses from public keys
+- Manage user authentication signatures
+
 ## 🛠️ Setup
 
 1. 📦 Clone the repository (if not already done)
@@ -135,23 +152,6 @@ This microservice interacts with the SwapCreatorAdapter contract deployed at:
 
 The SwapCreatorAdapter in turn interacts with the SwapCreator contract at:
 - Base Sepolia: `0x07b9c8BF96E553Adec406cC6ab8c41CCD3d53a51`
-
-## 🔐 Lit Protocol Integration
-
-This microservice integrates Lit Protocol to enhance the user experience for atomic swaps. While not strictly necessary for the atomic implementation itself, Lit Protocol automates Monero key management operations, particularly the claim step where funds are swept from the temporary wallet to the user's desired Monero address. This ensures compatibility with existing Web3 wallets that have no native support for Monero operations:
-
-- **Secure Key Generation**: Keys are generated within Lit Protocol's Trusted Execution Environment (TEE)
-- **One-Time Use**: Keys are programmatically restricted to be used only once for a specific transaction
-- **Access Control**: Keys are tied to specific user and transaction IDs
-- **No Key Exposure**: Private keys never leave the secure environment
-
-The `LitClient` class in `services/lit-client.ts` provides the following functionality:
-
-- Connect to Lit Protocol network
-- Generate one-time Monero keys tied to transaction and user IDs
-- Sign transactions using these keys within Lit's secure environment
-- Derive Monero addresses from public keys
-- Manage user authentication signatures
 
 ## 🧪 Testing
 
