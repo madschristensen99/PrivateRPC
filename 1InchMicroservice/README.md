@@ -148,10 +148,10 @@ prpc_getExchangeRate    # Get current ETH-XMR exchange rate
 ## 🔄 Integration with Smart Contracts
 
 This microservice interacts with the SwapCreatorAdapter contract deployed at:
-- Base Sepolia: `0x14Ab64a2f29f4921c200280988eea59c85266A33`
+- Base Sepolia: [`0x14Ab64a2f29f4921c200280988eea59c85266A33`](https://sepolia.basescan.org/address/0x14ab64a2f29f4921c200280988eea59c85266a33)
 
 The SwapCreatorAdapter in turn interacts with the SwapCreator contract at:
-- Base Sepolia: `0x07b9c8BF96E553Adec406cC6ab8c41CCD3d53a51`
+- Base Sepolia: [`0x07b9c8BF96E553Adec406cC6ab8c41CCD3d53a51`](https://sepolia.basescan.org/address/0x07b9c8bf96e553adec406cc6ab8c41ccd3d53a51)
 
 ## 🧪 Testing
 

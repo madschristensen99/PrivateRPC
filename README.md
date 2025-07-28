@@ -23,8 +23,7 @@ All other standard Ethereum RPC methods are passed through transparently to the 
 
 A key innovation in PrivateRPC is its approach to private funding of transactions:
 
-- **Transaction Origin Privacy**: By using resolver-sponsored transactions through SwapCreator.sol
-s Relay feature, the original funding source is decoupled from the transaction execution
+- **Transaction Origin Privacy**: By using resolver-sponsored transactions through SwapCreator.sol's Relay feature, the original funding source is decoupled from the transaction execution
 - **Address Isolation**: Each swap uses fresh addresses, preventing address clustering and chain analysis
 - **Cross-Chain Privacy**: Moving between ETH and XMR creates a fundamental break in the transaction graph that's impossible to trace through conventional means
 
@@ -62,8 +61,8 @@ To use as a drop-in RPC replacement, simply point your wallet or dApp to the mic
 
 The following contracts have been deployed to Base Sepolia testnet:
 
-- 📝 **SwapCreator**: `0x07b9c8BF96E553Adec406cC6ab8c41CCD3d53a51`
-- 🔄 **SwapCreatorAdapter**: `0x14Ab64a2f29f4921c200280988eea59c85266A33`
+- 📝 **SwapCreator**: [`0x07b9c8BF96E553Adec406cC6ab8c41CCD3d53a51`](https://sepolia.basescan.org/address/0x07b9c8bf96e553adec406cc6ab8c41ccd3d53a51)
+- 🔄 **SwapCreatorAdapter**: [`0x14Ab64a2f29f4921c200280988eea59c85266A33`](https://sepolia.basescan.org/address/0x14ab64a2f29f4921c200280988eea59c85266a33)
 
 ## 🛠️ Foundry Setup
 
