@@ -19,56 +19,25 @@ All other standard Ethereum RPC methods are passed through transparently to the 
 
 ## 🔄 1Inch Microservice
 
-The 1Inch Microservice is the core component that powers PrivateRPC's drop-in Ethereum RPC replacement. It seamlessly intercepts specific JSON-RPC methods to enable private, gas-less, atomic ETH ↔ XMR swaps while maintaining full compatibility with existing dApps and wallets.
+The 1Inch Microservice is the core component that powers PrivateRPC's drop-in Ethereum RPC replacement. It seamlessly intercepts specific JSON-RPC methods to enable private, gas-less, atomic ETH ↔ XMR swaps while maintaining full compatibility with existing dApps and wallets. It also integrates with the swap daemon from the xmr-eth-atomic-swap repository to facilitate the atomic swap process.
 
 For detailed setup and running instructions, see the [1InchMicroservice README](https://github.com/madschristensen99/PrivateRPC/tree/main/1InchMicroservice).
 
+## 🔄 Fusion + Contract Integration
 
-### 🔒 Atomic Swap Technology Stack
+PrivateRPC leverages 1inch Fusion technology to enable gas-less, private transactions through a sophisticated integration with custom smart contracts:
 
-To enable trustless ETH ↔ XMR swaps, the microservice integrates three key technologies:
+### 🔗 Contract Architecture
 
-1. **1inch Fusion SDK**: Handles Ethereum operations and interacts with the SwapCreatorAdapter contract
-2. **SwapD Daemon**: Manages Monero operations through its JSON-RPC API
-3. **Lit Protocol**: Provides secure one-time Monero key management in a Trusted Execution Environment
+- **SwapCreator**: Core contract that manages the atomic swap logic and holds ETH in escrow
+- **SwapCreatorAdapter**: Front-end contract that interfaces with the 1inch Fusion SDK
 
-### 🏗️ Architecture
+### 🚀 Fusion + Integration
 
-The microservice follows a modular architecture designed for reliability and maintainability:
-
-- **RPC Server**: Core JSON-RPC implementation that intercepts and modifies specific methods
-- **Services Layer**:
-  - `oneinch-service.ts`: Handles Ethereum operations via 1inch Fusion SDK
-  - `swapd-client.ts`: Interfaces with SwapD daemon for Monero operations
-  - `lit-client.ts`: Manages one-time Monero keys with Lit Protocol
-- **Controllers & Routes**: Additional RESTful API endpoints for direct integration
-
-### 📝 JSON-RPC Methods
-
-The service exposes a standard Ethereum JSON-RPC server (default port 8545) that's fully compatible with MetaMask and other EIP-1193 wallets, with these key intercepted methods:
-
-```
-# Intercepted Standard Methods
-eth_getBalance          # Returns (real balance - locked ETH)
-eth_sendTransaction     # Triggers atomic swap flow for SwapCreatorAdapter transactions
-eth_call                # Returns fake success for createEscrow calls
-eth_estimateGas         # Returns fixed gas for createEscrow operations
-
-# Additional Custom Methods
-prpc_createSwap         # Create a new atomic swap directly
-prpc_getSwapStatus      # Get status of an existing swap
-prpc_listSwaps          # List all swaps for a wallet
-prpc_getExchangeRate    # Get current ETH-XMR exchange rate
-```
-
-### 🔐 Secure Key Management with Lit Protocol
-
-A critical innovation in this microservice is using [Lit Protocol](https://developer.litprotocol.com/) to solve the Monero key management problem:
-
-- **One-Time Keys**: Generates secure, one-time use Monero keys for each swap
-- **Trusted Execution**: Keys are generated and used within Lit's secure environment
-- **Transaction Binding**: Keys are cryptographically bound to specific transactions
-- **No Key Exposure**: Private keys never leave the secure environment
+- **Gas Sponsorship**: Transactions are sponsored by resolvers, eliminating gas costs for users
+- **Private Execution**: Transaction details are kept private until execution
+- **Atomic Guarantees**: Smart contract ensures that swaps either complete fully or revert entirely
+- **Resolver Competition**: Multiple resolvers can compete to execute swaps, optimizing for best rates
 
 ### 🛠️ Setup and Usage
 
@@ -87,7 +56,7 @@ The following contracts have been deployed to Base Sepolia testnet:
 - 📝 **SwapCreator**: `0x07b9c8BF96E553Adec406cC6ab8c41CCD3d53a51`
 - 🔄 **SwapCreatorAdapter**: `0x14Ab64a2f29f4921c200280988eea59c85266A33`
 
-## 🛠️ Setup
+## 🛠️ Foundry Setup
 
 1. 📦 Clone this repository and its submodules:
    ```shell
