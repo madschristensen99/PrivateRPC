@@ -1,6 +1,6 @@
 # 🔒 PrivateRPC
 
-Replace any Ethereum RPC endpoint with pRPC and your MetaMask (or any EIP-1193 wallet) gains private, gas-less, atomic ETH ↔ XMR swaps while remaining fully compatible with existing dApps.
+Replace any Ethereum RPC endpoint with pRPC and your MetaMask (or any EIP-1193 wallet) gains private, gas-less, atomic ETH ↔ XMR swap based routing while remaining fully compatible with existing dApps.
 
 <p align="center">
   <img src="assets/logo.jpg" alt="PrivateRPC Logo">
@@ -15,20 +15,12 @@ Only the following four methods are intercepted and re-written; all others are f
 | `eth_call`            | If calldata is `createEscrow` → fake success; else forward            | `0x` / success  |
 | `eth_estimateGas`     | If calldata is `createEscrow` → fixed 200 k gas; else forward         | `0x30d40`       |
 
+All other standard Ethereum RPC methods are passed through transparently to the underlying Base-Sepolia node.
+
 ## 🔄 1Inch Microservice
 
 The 1Inch Microservice is the core component that powers PrivateRPC's drop-in Ethereum RPC replacement. It seamlessly intercepts specific JSON-RPC methods to enable private, gas-less, atomic ETH ↔ XMR swaps while maintaining full compatibility with existing dApps and wallets.
 
-### 🚀 Drop-in RPC Implementation
-
-The microservice implements a complete Ethereum JSON-RPC API that works as a transparent proxy between wallets/dApps and the actual Ethereum node. As described in the "How it works" section, it specifically intercepts and modifies these four critical methods:
-
-- **eth_getBalance**: Subtracts locked ETH in SwapCreator from the real balance
-- **eth_sendTransaction**: Intercepts transactions to SwapCreatorAdapter to trigger the atomic swap flow
-- **eth_call**: Returns fake success for createEscrow calls to maintain compatibility
-- **eth_estimateGas**: Returns fixed gas estimation for createEscrow operations
-
-All other standard Ethereum RPC methods are passed through transparently to the underlying Base-Sepolia node.
 
 ### 🔒 Atomic Swap Technology Stack
 
