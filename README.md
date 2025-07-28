@@ -17,42 +17,74 @@ Only the following four methods are intercepted and re-written; all others are f
 
 ## 🔄 1Inch Microservice
 
-The 1Inch Microservice is a TypeScript-based bridge between the 1inch Fusion SDK and the SwapD JSON-RPC API, enabling seamless atomic swaps between ETH and XMR.
+The 1Inch Microservice is the core component that powers PrivateRPC's drop-in Ethereum RPC replacement. It seamlessly intercepts specific JSON-RPC methods to enable private, gas-less, atomic ETH ↔ XMR swaps while maintaining full compatibility with existing dApps and wallets.
 
-### Features
+### 🚀 Drop-in RPC Implementation
 
-- 🔒 **Atomic Swaps**: Facilitates trustless ETH-XMR atomic swaps using the 1inch Fusion SDK, Lit Protocol, and SwapCreatorAdapter contract
-- 🔄 **SwapD Integration**: Communicates with the SwapD daemon via JSON-RPC for XMR operations
-- 🌐 **RESTful API**: Provides a comprehensive API for creating and monitoring swaps
-- 🔍 **Status Tracking**: Monitors the status of swaps across both Ethereum and Monero networks
+The microservice implements a complete Ethereum JSON-RPC API that works as a transparent proxy between wallets/dApps and the actual Ethereum node. As described in the "How it works" section, it specifically intercepts and modifies these four critical methods:
 
-### API Endpoints
+- **eth_getBalance**: Subtracts locked ETH in SwapCreator from the real balance
+- **eth_sendTransaction**: Intercepts transactions to SwapCreatorAdapter to trigger the atomic swap flow
+- **eth_call**: Returns fake success for createEscrow calls to maintain compatibility
+- **eth_estimateGas**: Returns fixed gas estimation for createEscrow operations
 
-#### 1inch Fusion Endpoints
-- `POST /escrow`: Create a new escrow for an atomic swap
-- `GET /predict-escrow`: Predict an escrow address without submitting a transaction
-- `GET /escrow/:orderHash`: Get the status of an existing escrow
+All other standard Ethereum RPC methods are passed through transparently to the underlying Base-Sepolia node.
 
-#### SwapD Endpoints
-- `GET /swapd/offers`: Get all available swap offers from the network
-- `POST /swapd/offers`: Create a new swap offer
-- `POST /swapd/offers/:offerID/take`: Take an existing swap offer
-- `GET /swapd/swaps/ongoing`: Get ongoing swaps
-- `GET /swapd/swaps/past`: Get past swaps
-- `GET /swapd/swaps/:id/status`: Get swap status
+### 🔒 Atomic Swap Technology Stack
 
-#### Integrated Endpoints
-- `POST /integrated/swap`: Create a complete XMR-ETH atomic swap using both 1inch and SwapD
-- `GET /integrated/swap/:orderHash/:swapId`: Get status of an integrated swap
+To enable trustless ETH ↔ XMR swaps, the microservice integrates three key technologies:
 
-### Setup
+1. **1inch Fusion SDK**: Handles Ethereum operations and interacts with the SwapCreatorAdapter contract
+2. **SwapD Daemon**: Manages Monero operations through its JSON-RPC API
+3. **Lit Protocol**: Provides secure one-time Monero key management in a Trusted Execution Environment
+
+### 🏗️ Architecture
+
+The microservice follows a modular architecture designed for reliability and maintainability:
+
+- **RPC Server**: Core JSON-RPC implementation that intercepts and modifies specific methods
+- **Services Layer**:
+  - `oneinch-service.ts`: Handles Ethereum operations via 1inch Fusion SDK
+  - `swapd-client.ts`: Interfaces with SwapD daemon for Monero operations
+  - `lit-client.ts`: Manages one-time Monero keys with Lit Protocol
+- **Controllers & Routes**: Additional RESTful API endpoints for direct integration
+
+### 📝 JSON-RPC Methods
+
+The service exposes a standard Ethereum JSON-RPC server (default port 8545) that's fully compatible with MetaMask and other EIP-1193 wallets, with these key intercepted methods:
+
+```
+# Intercepted Standard Methods
+eth_getBalance          # Returns (real balance - locked ETH)
+eth_sendTransaction     # Triggers atomic swap flow for SwapCreatorAdapter transactions
+eth_call                # Returns fake success for createEscrow calls
+eth_estimateGas         # Returns fixed gas for createEscrow operations
+
+# Additional Custom Methods
+prpc_createSwap         # Create a new atomic swap directly
+prpc_getSwapStatus      # Get status of an existing swap
+prpc_listSwaps          # List all swaps for a wallet
+prpc_getExchangeRate    # Get current ETH-XMR exchange rate
+```
+
+### 🔐 Secure Key Management with Lit Protocol
+
+A critical innovation in this microservice is using Lit Protocol to solve the Monero key management problem:
+
+- **One-Time Keys**: Generates secure, one-time use Monero keys for each swap
+- **Trusted Execution**: Keys are generated and used within Lit's secure environment
+- **Transaction Binding**: Keys are cryptographically bound to specific transactions
+- **No Key Exposure**: Private keys never leave the secure environment
+
+### 🛠️ Setup and Usage
 
 1. Navigate to the 1InchMicroservice directory
-2. Create a `.env` file based on `.env.example`
+2. Create a `.env` file based on `.env.example` with your configuration
 3. Install dependencies: `npm install`
-4. Start the service: `npm start`
+4. Build the TypeScript code: `npm run build`
+5. Start the service: `npm start`
 
-The microservice requires both a running SwapD daemon and access to the Ethereum network via an RPC provider.
+To use as a drop-in RPC replacement, simply point your wallet or dApp to the microservice's RPC endpoint (default: http://localhost:8545) instead of your regular Ethereum RPC provider.
 
 ## 🚀 Deployed Contracts
 
