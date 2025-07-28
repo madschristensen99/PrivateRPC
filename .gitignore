@@ -19,6 +19,9 @@ docs/
 # Node modules
 node_modules/
 
+# Build output
+dist/
+
 # Coverage
 coverage/
 coverage.json
