@@ -1,6 +1,6 @@
 # 🔒 PrivateRPC
 
-Replace any Ethereum RPC endpoint with pRPC and your MetaMask (or any EIP-1193 wallet) gains private, gas-less, atomic ETH ↔ XMR swap based routing while remaining fully compatible with existing dApps.
+Replace any Ethereum RPC endpoint with a Private RPC and your MetaMask (or any EIP-1193 wallet) gains private, gas-less, atomic ETH ↔ XMR swap based transaction routing while remaining fully compatible with existing dApps.
 
 <p align="center">
   <img src="assets/logo.jpg" alt="PrivateRPC Logo">
@@ -10,7 +10,7 @@ Replace any Ethereum RPC endpoint with pRPC and your MetaMask (or any EIP-1193 w
 Only the following four methods are intercepted and re-written; all others are forwarded verbatim to the real Base-Sepolia node.
 | Method                | Interception Logic                                                    | Return Value    |
 | --------------------- | --------------------------------------------------------------------- | --------------- |
-| `eth_getBalance`      | Query real balance, subtract **locked ETH** in `SwapCreator`          | `real - locked` |
+| `eth_getBalance`      | Query combined balance from collection of addresses associated with the user          | `combined balance` |
 | `eth_sendTransaction` | If `tx.to == SwapCreatorAdapter` → **atomic swap flow**; else forward | swap tx hash    |
 | `eth_call`            | If calldata is `createEscrow` → fake success; else forward            | `0x` / success  |
 | `eth_estimateGas`     | If calldata is `createEscrow` → fixed 200 k gas; else forward         | `0x30d40`       |
