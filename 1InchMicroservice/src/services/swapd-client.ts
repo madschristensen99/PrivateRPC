@@ -6,6 +6,8 @@
  */
 
 import axios from 'axios';
+import { SWAPD } from '../config';
+import { logger } from '../utils/logger';
 
 export interface SwapOffer {
   offerID: string;
@@ -63,8 +65,9 @@ export class SwapDClient {
   private jsonRpcVersion = '2.0';
   private requestId = 0;
 
-  constructor(rpcUrl: string = 'http://127.0.0.1:5000') {
+  constructor(rpcUrl: string = SWAPD.RPC_URL) {
     this.rpcUrl = rpcUrl;
+    logger.info(`SwapD client initialized with RPC URL: ${rpcUrl}`);
   }
 
   /**
@@ -79,20 +82,39 @@ export class SwapDClient {
     };
 
     try {
+      logger.debug(`SwapD RPC call: ${method} with params: ${JSON.stringify(params)}`);
       const response = await axios.post(this.rpcUrl, requestData, {
         headers: { 'Content-Type': 'application/json' }
       });
 
       if (response.data.error) {
-        throw new Error(`SwapD RPC Error: ${JSON.stringify(response.data.error)}`);
+        const errorMsg = `SwapD RPC Error: ${JSON.stringify(response.data.error)}`;
+        logger.error(errorMsg);
+        throw new Error(errorMsg);
       }
 
       return response.data.result;
-    } catch (error) {
+    } catch (error: any) {
       if (axios.isAxiosError(error)) {
-        throw new Error(`SwapD Connection Error: ${error.message}`);
+        const errorMsg = `SwapD Connection Error: ${error.message}`;
+        logger.error(errorMsg);
+        throw new Error(errorMsg);
       }
+      logger.error(`SwapD Unknown Error: ${error.message}`);
       throw error;
+    }
+  }
+
+  /**
+   * Ping the SwapD daemon to check if it's alive
+   */
+  async ping(): Promise<boolean> {
+    try {
+      await this.call('ping', {});
+      return true;
+    } catch (error: any) {
+      logger.error(`SwapD ping failed: ${error.message}`);
+      return false;
     }
   }
 
@@ -198,19 +220,6 @@ export class SwapDClient {
     weiBalance: string;
   }> {
     return this.call('personal_balances', {});
-  }
-
-  /**
-   * Simple ping method to check if SwapD daemon is accessible
-   */
-  async ping(): Promise<boolean> {
-    try {
-      // Call a lightweight method to check connectivity
-      await this.call('swap_suggestedExchangeRate', {});
-      return true;
-    } catch (error) {
-      return false;
-    }
   }
 }
 

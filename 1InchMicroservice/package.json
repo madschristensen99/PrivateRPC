@@ -1,7 +1,7 @@
 {
   "name": "1inch-microservice",
   "version": "1.0.0",
-  "description": "Microservice for handling 1inch protocol integration with PrivateRPC",
+  "description": "Microservice for handling 1inch protocol integration with PrivateRPC for atomic ETH ↔ XMR swaps",
   "main": "dist/index.js",
   "scripts": {
     "build": "tsc",
@@ -13,19 +13,31 @@
   "keywords": [
     "1inch",
     "ethereum",
-    "swap",
-    "microservice"
+    "monero",
+    "atomic-swap",
+    "lit-protocol",
+    "private-transactions"
   ],
   "author": "",
   "license": "ISC",
   "dependencies": {
     "@1inch/fusion-sdk": "^2.3.5",
+    "@lit-protocol/contracts-sdk": "^6.11.5",
+    "@lit-protocol/lit-node-client": "^6.11.5",
+    "@lit-protocol/pkp-ethers": "^6.11.5",
+    "@lit-protocol/wrapped-keys": "^6.11.5",
+    "@types/cors": "^2.8.17",
     "@types/express": "^5.0.3",
     "@types/node": "^24.1.0",
     "axios": "^1.11.0",
+    "cors": "^2.8.5",
     "dotenv": "^17.2.1",
     "ethers": "^6.15.0",
     "express": "^5.1.0",
+    "express-rate-limit": "^7.1.5",
+    "helmet": "^7.1.0",
+    "pino": "^8.17.2",
+    "pino-pretty": "^10.3.1",
     "ts-node": "^10.9.2",
     "typescript": "^5.8.3"
   },

@@ -1,168 +1,89 @@
 "use strict";
 /**
- * 1Inch Microservice for PrivateRPC
+ * PrivateRPC Main Application
  *
- * This microservice acts as a bridge between the PrivateRPC system and the 1inch protocol.
- * It handles the creation of escrows for atomic swaps between ETH and XMR using the
- * SwapCreatorAdapter contract deployed on Base Sepolia.
+ * This is the entry point for the PrivateRPC microservice that enables
+ * private, gas-less, atomic ETH ↔ XMR swaps.
  */
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
+const helmet_1 = __importDefault(require("helmet"));
+const cors_1 = __importDefault(require("cors"));
+const express_rate_limit_1 = __importDefault(require("express-rate-limit"));
 const ethers_1 = require("ethers");
-const dotenv_1 = __importDefault(require("dotenv"));
-// Load environment variables
-dotenv_1.default.config();
-// Constants
-const PORT = process.env.PORT || 3000;
-const SWAP_CREATOR_ADAPTER_ADDRESS = '0x14Ab64a2f29f4921c200280988eea59c85266A33';
-const SWAP_CREATOR_ADDRESS = '0x07b9c8BF96E553Adec406cC6ab8c41CCD3d53a51';
-const BASE_SEPOLIA_RPC_URL = process.env.BASE_SEPOLIA_RPC_URL || 'https://sepolia.base.org';
+// Import configuration
+const config_1 = require("./config");
+// Import services
+const oneinch_service_1 = __importDefault(require("./services/oneinch-service"));
+const swapd_client_1 = __importDefault(require("./services/swapd-client"));
+const lit_client_1 = __importDefault(require("./services/lit-client"));
+const rpc_server_1 = __importDefault(require("./services/rpc-server"));
+// Import controllers
+const swap_controller_1 = __importDefault(require("./controllers/swap-controller"));
+const swapd_controller_1 = __importDefault(require("./controllers/swapd-controller"));
+// Import routes
+const swap_routes_1 = __importDefault(require("./routes/swap-routes"));
+const swapd_routes_1 = __importDefault(require("./routes/swapd-routes"));
+// Import middleware
+const auth_1 = __importDefault(require("./middleware/auth"));
+const error_handler_1 = require("./middleware/error-handler");
+// Import logger
+const logger_1 = require("./utils/logger");
 // Initialize Express app
 const app = (0, express_1.default)();
+// Apply basic middleware
+app.use((0, helmet_1.default)());
+app.use((0, cors_1.default)());
 app.use(express_1.default.json());
-// Initialize Ethereum provider
-const provider = new ethers_1.ethers.JsonRpcProvider(BASE_SEPOLIA_RPC_URL);
-// ABI for SwapCreatorAdapter (minimal interface for what we need)
-const SWAP_CREATOR_ADAPTER_ABI = [
-    "function createEscrow(bytes32,address,uint256,address,address,uint48,uint48,bytes) external payable",
-    "function predictEscrowAddress(bytes32,address,uint256,address,address,uint48,uint48,bytes) external view returns (address)"
-];
-// Initialize contract instance
-const swapCreatorAdapter = new ethers_1.ethers.Contract(SWAP_CREATOR_ADAPTER_ADDRESS, SWAP_CREATOR_ADAPTER_ABI, provider);
-/**
- * Health check endpoint
- */
+app.use(express_1.default.urlencoded({ extended: true }));
+// Apply rate limiting
+app.use((0, express_rate_limit_1.default)({
+    windowMs: config_1.RATE_LIMIT.WINDOW_MS,
+    max: config_1.RATE_LIMIT.MAX_REQUESTS,
+    standardHeaders: true,
+    legacyHeaders: false,
+}));
+// Initialize services
+const provider = new ethers_1.ethers.JsonRpcProvider(config_1.BLOCKCHAIN.BASE_SEPOLIA_RPC_URL);
+const oneInchService = new oneinch_service_1.default();
+const swapdClient = new swapd_client_1.default(config_1.SWAPD.RPC_URL);
+const litClient = new lit_client_1.default();
+// Initialize controllers
+const swapController = new swap_controller_1.default(oneInchService, swapdClient, litClient);
+const swapdController = new swapd_controller_1.default(swapdClient);
+// Apply routes
+app.use('/api/swap', auth_1.default, (0, swap_routes_1.default)(swapController));
+app.use('/api/swapd', auth_1.default, (0, swapd_routes_1.default)(swapdController));
+// Health check endpoint (no auth required)
 app.get('/health', (req, res) => {
-    res.status(200).json({ status: 'ok', message: '1Inch Microservice is running' });
+    res.status(200).json({
+        status: 'ok',
+        timestamp: new Date().toISOString(),
+        service: 'PrivateRPC Microservice'
+    });
 });
-/**
- * Create a new escrow for an atomic swap
- *
- * TODO: Implement the full logic for creating an escrow
- * - Validate request parameters
- * - Generate claim and refund conditions
- * - Call the SwapCreatorAdapter contract
- * - Return the transaction hash and escrow details
- */
-app.post('/escrow', async (req, res) => {
-    try {
-        // TODO: Extract and validate parameters from request body
-        // const { amount, recipient, deadline, etc... } = req.body;
-        // TODO: Generate claim and refund conditions based on the swap requirements
-        // TODO: Create a wallet instance using private key from env
-        // const wallet = new ethers.Wallet(process.env.PRIVATE_KEY!, provider);
-        // TODO: Connect to the contract with the wallet
-        // const connectedContract = swapCreatorAdapter.connect(wallet);
-        // TODO: Call createEscrow function with appropriate parameters
-        // const tx = await connectedContract.createEscrow(...);
-        // TODO: Wait for transaction confirmation
-        // const receipt = await tx.wait();
-        // For now, return a placeholder response
-        res.status(200).json({
-            status: 'not implemented',
-            message: 'Escrow creation endpoint is under development'
-        });
-    }
-    catch (error) {
-        console.error('Error creating escrow:', error);
-        res.status(500).json({
-            status: 'error',
-            message: 'Failed to create escrow',
-            error: error.message
-        });
-    }
+// Apply error handling middleware
+app.use(error_handler_1.notFoundHandler);
+app.use(error_handler_1.errorHandler);
+// Initialize RPC server
+const rpcServer = new rpc_server_1.default(provider, swapdClient, litClient);
+rpcServer.start();
+// Start the server
+const server = app.listen(config_1.SERVER.PORT, () => {
+    logger_1.logger.info(`🚀 PrivateRPC Microservice running on port ${config_1.SERVER.PORT}`);
+    logger_1.logger.info(`Environment: ${config_1.SERVER.NODE_ENV}`);
+    logger_1.logger.info(`SwapD connected at: ${config_1.SWAPD.RPC_URL}`);
 });
-/**
- * Predict the escrow address for a potential swap
- *
- * TODO: Implement the logic to predict an escrow address
- * - Validate request parameters
- * - Call the predictEscrowAddress function on the contract
- * - Return the predicted address
- */
-app.get('/predict-escrow', async (req, res) => {
-    try {
-        // TODO: Extract and validate parameters from request query
-        // const { amount, recipient, deadline, etc... } = req.query;
-        // TODO: Call predictEscrowAddress function with appropriate parameters
-        // const predictedAddress = await swapCreatorAdapter.predictEscrowAddress(...);
-        // For now, return a placeholder response
-        res.status(200).json({
-            status: 'not implemented',
-            message: 'Escrow prediction endpoint is under development'
-        });
-    }
-    catch (error) {
-        console.error('Error predicting escrow address:', error);
-        res.status(500).json({
-            status: 'error',
-            message: 'Failed to predict escrow address',
-            error: error.message
-        });
-    }
+// Handle graceful shutdown
+process.on('SIGTERM', () => {
+    logger_1.logger.info('SIGTERM signal received: closing HTTP server');
+    server.close(() => {
+        logger_1.logger.info('HTTP server closed');
+        rpcServer.stop();
+        process.exit(0);
+    });
 });
-/**
- * Get the status of an existing escrow
- *
- * TODO: Implement the logic to check escrow status
- * - Query the SwapCreator contract for the swap status
- * - Return the current state of the escrow
- */
-app.get('/escrow/:id', async (req, res) => {
-    try {
-        const escrowId = req.params.id;
-        // TODO: Query the SwapCreator contract for the swap status
-        // const status = await swapCreator.getSwapStatus(escrowId);
-        // For now, return a placeholder response
-        res.status(200).json({
-            status: 'not implemented',
-            message: 'Escrow status endpoint is under development',
-            escrowId
-        });
-    }
-    catch (error) {
-        console.error('Error getting escrow status:', error);
-        res.status(500).json({
-            status: 'error',
-            message: 'Failed to get escrow status',
-            error: error.message
-        });
-    }
-});
-/**
- * Start the server
- */
-app.listen(PORT, () => {
-    console.log(`🚀 1Inch Microservice running on port ${PORT}`);
-    console.log(`📝 SwapCreatorAdapter address: ${SWAP_CREATOR_ADAPTER_ADDRESS}`);
-    console.log(`📝 SwapCreator address: ${SWAP_CREATOR_ADDRESS}`);
-});
-/**
- * TODO: Implement additional helper functions
- *
- * 1. Function to generate claim and refund conditions
- * 2. Function to monitor swap status
- * 3. Function to handle callbacks for successful/failed swaps
- * 4. Integration with 1inch API for price quotes
- * 5. Error handling and logging
- */
-/**
- * TODO: Implement proper error handling and logging
- *
- * 1. Set up a logging system (e.g., Winston)
- * 2. Implement request validation middleware
- * 3. Add proper error handling middleware
- * 4. Implement rate limiting
- */
-/**
- * TODO: Add authentication and security
- *
- * 1. Implement API key authentication
- * 2. Add request validation
- * 3. Implement CORS
- * 4. Add request rate limiting
- */
 exports.default = app;
