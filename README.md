@@ -17,9 +17,21 @@ Only the following four methods are intercepted and re-written; all others are f
 
 All other standard Ethereum RPC methods are passed through transparently to the underlying Base-Sepolia node.
 
+## 🔒 Privacy Features
+
+### Private Funding
+
+A key innovation in PrivateRPC is its approach to private funding of transactions:
+
+- **Transaction Origin Privacy**: By using resolver-sponsored transactions through SwapCreator.sol
+s Relay feature, the original funding source is decoupled from the transaction execution
+- **Address Isolation**: Each swap uses fresh addresses, preventing address clustering and chain analysis
+- **Cross-Chain Privacy**: Moving between ETH and XMR creates a fundamental break in the transaction graph that's impossible to trace through conventional means
+
+
 ## 🔄 1Inch Microservice
 
-The 1Inch Microservice is the core component that powers PrivateRPC's drop-in Ethereum RPC replacement. It seamlessly intercepts specific JSON-RPC methods to enable private, gas-less, atomic ETH ↔ XMR swaps while maintaining full compatibility with existing dApps and wallets. It also integrates with the swap daemon from the xmr-eth-atomic-swap repository to facilitate the atomic swap process.
+The 1Inch Microservice is the core component that powers PrivateRPC's drop-in Ethereum RPC replacement. It intercepts specific JSON-RPC methods and routes them though gas sponsored, atomic ETH ↔ XMR swaps while maintaining full compatibility with existing dApps and wallets. It also integrates with the swap daemon from the xmr-eth-atomic-swap repository to facilitate the atomic swap process.
 
 For detailed setup and running instructions, see the [1InchMicroservice README](https://github.com/madschristensen99/PrivateRPC/tree/main/1InchMicroservice).
 
