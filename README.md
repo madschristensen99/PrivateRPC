@@ -25,17 +25,14 @@ For detailed setup and running instructions, see the [1InchMicroservice README](
 
 ## 🔄 Fusion + Contract Integration
 
-PrivateRPC leverages 1inch Fusion technology to enable gas-less, private transactions through a sophisticated integration with custom smart contracts:
-
 ### 🔗 Contract Architecture
 
 - **SwapCreator**: Core contract that manages the atomic swap logic and holds ETH in escrow
-- **SwapCreatorAdapter**: Front-end contract that interfaces with the 1inch Fusion SDK
+- **SwapCreatorAdapter**: Adaptor contract that implements the IEscrowSrc interface
 
 ### 🚀 Fusion + Integration
 
-- **Gas Sponsorship**: Transactions are sponsored by resolvers, eliminating gas costs for users
-- **Private Execution**: Transaction details are kept private until execution
+- **Gas Sponsorship**: Transactions are sponsored by resolvers, enabling private funding of addresses
 - **Atomic Guarantees**: Smart contract ensures that swaps either complete fully or revert entirely
 - **Resolver Competition**: Multiple resolvers can compete to execute swaps, optimizing for best rates
 
