@@ -138,7 +138,7 @@ The SwapCreatorAdapter in turn interacts with the SwapCreator contract at:
 
 ## 🔐 Lit Protocol Integration
 
-This microservice integrates Lit Protocol to solve the key management problem for atomic swaps. Each transaction requires a one-time use Monero key, which is securely generated and managed by Lit Protocol:
+This microservice integrates Lit Protocol to enhance the user experience for atomic swaps. While not strictly necessary for the atomic implementation itself, Lit Protocol automates Monero key management operations, particularly the claim step where funds are swept from the temporary wallet to the user's desired Monero address. This ensures compatibility with existing Web3 wallets that have no native support for Monero operations:
 
 - **Secure Key Generation**: Keys are generated within Lit Protocol's Trusted Execution Environment (TEE)
 - **One-Time Use**: Keys are programmatically restricted to be used only once for a specific transaction
