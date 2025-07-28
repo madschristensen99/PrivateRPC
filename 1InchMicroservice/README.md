@@ -27,7 +27,7 @@ The microservice follows a modular architecture:
 
 ## 🔐 Lit Protocol Integration
 
-This microservice integrates Lit Protocol to enhance the user experience for atomic swaps. While not strictly necessary for the atomic implementation itself, Lit Protocol automates Monero key management operations, particularly the claim step where funds are swept from the temporary wallet to the user's desired Monero address. This ensures compatibility with existing Web3 wallets that have no native support for Monero operations:
+This microservice integrates [Lit Protocol](https://developer.litprotocol.com/) to enhance the user experience for atomic swaps. While not strictly necessary for the atomic implementation itself, Lit Protocol automates Monero key management operations, particularly the claim step where funds are swept from the temporary wallet to the user's desired Monero address. This ensures compatibility with existing Web3 wallets that have no native support for Monero operations:
 
 - **Secure Key Generation**: Keys are generated within Lit Protocol's Trusted Execution Environment (TEE)
 - **One-Time Use**: Keys are programmatically restricted to be used only once for a specific transaction
