@@ -21,6 +21,8 @@ All other standard Ethereum RPC methods are passed through transparently to the 
 
 The 1Inch Microservice is the core component that powers PrivateRPC's drop-in Ethereum RPC replacement. It seamlessly intercepts specific JSON-RPC methods to enable private, gas-less, atomic ETH ↔ XMR swaps while maintaining full compatibility with existing dApps and wallets.
 
+For detailed setup and running instructions, see the [1InchMicroservice README](https://github.com/madschristensen99/PrivateRPC/tree/main/1InchMicroservice).
+
 
 ### 🔒 Atomic Swap Technology Stack
 
