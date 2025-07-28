@@ -61,7 +61,7 @@ prpc_getExchangeRate    # Get current ETH-XMR exchange rate
 
 ### 🔐 Secure Key Management with Lit Protocol
 
-A critical innovation in this microservice is using Lit Protocol to solve the Monero key management problem:
+A critical innovation in this microservice is using [Lit Protocol](https://developer.litprotocol.com/) to solve the Monero key management problem:
 
 - **One-Time Keys**: Generates secure, one-time use Monero keys for each swap
 - **Trusted Execution**: Keys are generated and used within Lit's secure environment
