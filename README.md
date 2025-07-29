@@ -1,21 +1,30 @@
 # 🔒 PrivateRPC
 
-Replace any Ethereum RPC endpoint with a Private RPC and your MetaMask (or any EIP-1193 wallet) gains private, gas-less, atomic ETH ↔ XMR swap based transaction routing while remaining fully compatible with existing dApps.
+PrivateRPC offers a tiered privacy approach for Ethereum transactions, enabling private, gas-less, atomic ETH ↔ XMR swaps while maintaining compatibility with existing dApps and wallets. Choose between basic privacy with our RPC endpoint or enhanced privacy with our MetaMask Snap.
 
 <p align="center">
   <img src="assets/logo.jpg" alt="PrivateRPC Logo">
 </p>
 
-## How it works:
-Only the following four methods are intercepted and re-written; all others are forwarded verbatim to the real Base-Sepolia node.
-| Method                | Interception Logic                                                    | Return Value    |
-| --------------------- | --------------------------------------------------------------------- | --------------- |
-| `eth_getBalance`      | Query combined balance from collection of addresses associated with the user          | `combined balance` |
-| `eth_sendTransaction` | If `tx.to == SwapCreatorAdapter` → **atomic swap flow**; else forward | swap tx hash    |
-| `eth_call`            | If calldata is `createEscrow` → fake success; else forward            | `0x` / success  |
-| `eth_estimateGas`     | If calldata is `createEscrow` → fixed 200 k gas; else forward         | `0x30d40`       |
+## 🔒 Tiered Privacy Approach
 
-All other standard Ethereum RPC methods are passed through transparently to the underlying Base-Sepolia node.
+PrivateRPC offers two levels of privacy protection:
+
+### Basic Privacy (RPC Endpoint)
+
+- Point your wallet to our RPC endpoint
+- Use custom `prpc_*` methods for atomic swaps
+- Compatible with any standard Ethereum wallet
+- No additional software required
+
+### Enhanced Privacy (MetaMask Snap)
+
+- Install our MetaMask Snap for maximum privacy
+- Automatic transaction interception and privacy enhancement
+- Advanced features like stealth addresses and zero-knowledge proofs
+- Seamless atomic ETH ↔ XMR swaps
+
+For detailed information on our tiered privacy approach, see the [Tiered Privacy Approach](https://github.com/madschristensen99/PrivateRPC/blob/main/docs/TIERED_PRIVACY_APPROACH.md) document.
 
 ## 🔒 Privacy Features
 
@@ -30,7 +39,12 @@ A key innovation in PrivateRPC is its approach to private funding of transaction
 
 ## 🔄 1Inch Microservice
 
-The 1Inch Microservice is the core component that powers PrivateRPC's drop-in Ethereum RPC replacement. It intercepts specific JSON-RPC methods and routes them though gas sponsored, atomic ETH ↔ XMR swaps while maintaining full compatibility with existing dApps and wallets. It also integrates with the swap daemon from the xmr-eth-atomic-swap repository to facilitate the atomic swap process.
+The 1Inch Microservice is the core component that powers PrivateRPC's privacy features. It provides:
+
+- Standard JSON-RPC endpoint compatible with existing wallets
+- Custom `prpc_*` namespace for atomic swap operations
+- Integration with the swap daemon from the xmr-eth-atomic-swap repository
+- Support for both direct RPC usage and MetaMask Snap integration
 
 For detailed setup and running instructions, see the [1InchMicroservice README](https://github.com/madschristensen99/PrivateRPC/tree/main/1InchMicroservice).
 

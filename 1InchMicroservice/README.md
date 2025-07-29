@@ -1,9 +1,10 @@
 # 🔄 PrivateRPC Microservice
 
-This microservice enables private, gas-less, atomic ETH ↔ XMR swaps by integrating the 1inch Fusion SDK (for Ethereum swaps), SwapD daemon (for Monero swaps), and Lit Protocol (for secure one-time Monero key management). It exposes both RESTful API endpoints and JSON-RPC endpoints for creating and managing atomic swaps.
+This microservice enables private, gas-less, atomic ETH ↔ XMR swaps by integrating the 1inch Fusion SDK (for Ethereum swaps), SwapD daemon (for Monero swaps), and Lit Protocol (for secure one-time Monero key management). It supports our tiered privacy approach, offering both a standard JSON-RPC endpoint and custom `prpc_*` methods for enhanced privacy features.
 
 ## 🚀 Features
 
+- **Tiered Privacy**: Support for both basic privacy (RPC endpoint) and enhanced privacy (MetaMask Snap)
 - **Atomic ETH ↔ XMR Swaps**: Seamlessly swap between Ethereum and Monero with atomic guarantees
 - **One-Time Monero Keys**: Generate secure, one-time use Monero keys using Lit Protocol
 - **Modular Architecture**: Clean separation of concerns for better maintainability
@@ -128,22 +129,24 @@ GET  /api/swapd/balances           # Get wallet balances
 
 ### JSON-RPC Endpoints
 
-The service also exposes a JSON-RPC server (default port 8545) with the following methods:
+The service exposes a JSON-RPC server (default port 8545) with the following methods:
 
 ```
-# Standard Ethereum Methods
+# Standard Ethereum Methods (Forwarded to underlying node)
 eth_chainId, eth_blockNumber, eth_getBalance, eth_sendTransaction, eth_call,
 eth_estimateGas, eth_getTransactionCount, eth_getCode, eth_getStorageAt,
 eth_getBlockByNumber, eth_getBlockByHash, eth_getTransactionByHash,
 eth_getTransactionReceipt, net_version
 
-# Custom PrivateRPC Methods
+# Custom PrivateRPC Methods (For atomic swaps and privacy features)
 prpc_createSwap         # Create a new atomic swap
 prpc_getSwapStatus      # Get status of an existing swap
 prpc_listSwaps          # List all swaps for a wallet
 prpc_cancelSwap         # Cancel an active swap
 prpc_getExchangeRate    # Get current ETH-XMR exchange rate
 ```
+
+> **Note**: In compatibility mode, standard Ethereum methods are passed through transparently to the underlying node, and only the `prpc_*` namespace is handled by the microservice. This ensures maximum compatibility with existing dApps.
 
 ## 🔄 Integration with Smart Contracts
 
