@@ -1,0 +1,39 @@
+{
+  "version": "0.1.0",
+  "description": "MetaMask Snap for PrivateRPC providing enhanced privacy features and atomic ETH ↔ XMR swaps",
+  "proposedName": "PrivateRPC",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/madschristensen99/PrivateRPC.git"
+  },
+  "source": {
+    "shasum": "SHASUM_PLACEHOLDER",
+    "location": {
+      "npm": {
+        "filePath": "dist/bundle.js",
+        "iconPath": "images/icon.svg",
+        "packageName": "private-rpc-snap",
+        "registry": "https://registry.npmjs.org/"
+      }
+    }
+  },
+  "initialPermissions": {
+    "snap_dialog": {},
+    "endowment:rpc": {
+      "dapps": true,
+      "snaps": false
+    },
+    "snap_manageState": {},
+    "endowment:network-access": {},
+    "endowment:ethereum-provider": {},
+    "snap_getBip44Entropy": [
+      {
+        "coinType": 60
+      },
+      {
+        "coinType": 128
+      }
+    ]
+  },
+  "manifestVersion": "0.1"
+}
