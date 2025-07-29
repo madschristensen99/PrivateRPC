@@ -1,30 +1,31 @@
 # 🔒 PrivateRPC
 
-PrivateRPC offers a tiered privacy approach for Ethereum transactions, enabling private, gas-less, atomic ETH ↔ XMR swaps while maintaining compatibility with existing dApps and wallets. Choose between basic privacy with our RPC endpoint or enhanced privacy with our MetaMask Snap.
+PrivateRPC enables private, gas-less, atomic ETH ↔ XMR swaps through a MetaMask Snap and microservice architecture. This approach ensures full compatibility with existing dApps and wallets while providing enhanced privacy features.
 
 <p align="center">
   <img src="assets/logo.jpg" alt="PrivateRPC Logo">
 </p>
 
-## 🔒 Tiered Privacy Approach
+## 🔒 Architecture Overview
 
-PrivateRPC offers two levels of privacy protection:
+PrivateRPC consists of two main components:
 
-### Basic Privacy (RPC Endpoint)
+### MetaMask Snap
 
-- Point your wallet to our RPC endpoint
-- Use custom `prpc_*` methods for atomic swaps
-- Compatible with any standard Ethereum wallet
-- No additional software required
-
-### Enhanced Privacy (MetaMask Snap)
-
-- Install our MetaMask Snap for maximum privacy
+- Install our MetaMask Snap for privacy-enhanced transactions
 - Automatic transaction interception and privacy enhancement
 - Advanced features like stealth addresses and zero-knowledge proofs
 - Seamless atomic ETH ↔ XMR swaps
+- User-friendly interface integrated directly into MetaMask
 
-For detailed information on our tiered privacy approach, see the [Tiered Privacy Approach](https://github.com/madschristensen99/PrivateRPC/blob/main/docs/TIERED_PRIVACY_APPROACH.md) document.
+### Microservice Backend
+
+- RESTful API for atomic swap operations
+- Integration with 1inch Fusion for Ethereum operations
+- Integration with SwapD for Monero operations
+- Lit Protocol for secure one-time Monero key management
+
+This clean architecture ensures full compatibility with existing dApps while providing enhanced privacy features through the optional MetaMask Snap.
 
 ## 🔒 Privacy Features
 
@@ -37,14 +38,15 @@ A key innovation in PrivateRPC is its approach to private funding of transaction
 - **Cross-Chain Privacy**: Moving between ETH and XMR creates a fundamental break in the transaction graph that's impossible to trace through conventional means
 
 
-## 🔄 1Inch Microservice
+## 🔄 Microservice Backend
 
-The 1Inch Microservice is the core component that powers PrivateRPC's privacy features. It provides:
+The microservice backend is the core component that powers PrivateRPC's atomic swap functionality. It provides:
 
-- Standard JSON-RPC endpoint compatible with existing wallets
-- Custom `prpc_*` namespace for atomic swap operations
-- Integration with the swap daemon from the xmr-eth-atomic-swap repository
-- Support for both direct RPC usage and MetaMask Snap integration
+- RESTful API for atomic swap operations
+- Integration with 1inch Fusion for Ethereum operations
+- Integration with SwapD daemon for Monero operations
+- Secure one-time Monero key management via Lit Protocol
+- Support for MetaMask Snap integration
 
 For detailed setup and running instructions, see the [1InchMicroservice README](https://github.com/madschristensen99/PrivateRPC/tree/main/1InchMicroservice).
 

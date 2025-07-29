@@ -1,4 +1,7 @@
 import { ethers } from 'ethers';
+import { OnRpcRequestHandler } from '@metamask/snaps-types';
+import { heading, panel, text } from '@metamask/snaps-ui';
+import type { Snap } from '@metamask/snaps-types';
 
 /**
  * Interface for a meta-transaction.
@@ -105,18 +108,75 @@ export async function createMetaTransaction(
 }
 
 /**
+ * Get the stealth address mapping.
+ * 
+ * @param snap - The snap instance.
+ * @returns The stealth address mapping.
+ */
+export async function getStealthAddressMapping(snap: Snap): Promise<Record<string, string>> {
+  try {
+    const state = await snap.request({
+      method: 'snap_manageState',
+      params: { operation: 'get' }
+    });
+    
+    return (state?.stealthAddresses as Record<string, string>) || {};
+  } catch (error) {
+    console.error('Error retrieving stealth address mapping:', error);
+    return {};
+  }
+}
+
+/**
  * Create a stealth address for enhanced privacy.
  * 
- * @returns The stealth address details.
+ * @param publicKey - The recipient's public key.
+ * @param snap - The snap instance.
+ * @returns The stealth address.
  */
-export async function createStealthAddress(): Promise<{ address: string; privateKey: string }> {
-  // Generate a random wallet
-  const wallet = ethers.Wallet.createRandom();
-
-  return {
-    address: wallet.address,
-    privateKey: wallet.privateKey,
-  };
+export async function generateStealthAddress(publicKey: string, snap: Snap): Promise<string> {
+  try {
+    // Generate a random ephemeral key pair
+    const ephemeralKeyPair = ethers.Wallet.createRandom();
+    
+    // Derive a shared secret using the recipient's public key
+    // Note: This is a simplified implementation - in production, use proper ECDH
+    const recipientKey = new ethers.SigningKey(publicKey);
+    const sharedSecret = ethers.sha256(ethers.concat([
+      ethers.getBytes(ephemeralKeyPair.privateKey),
+      ethers.getBytes(recipientKey.publicKey)
+    ]));
+    
+    // Hash the shared secret to derive the stealth address
+    const stealthAddressBytes = ethers.keccak256(
+      ethers.concat([
+        ethers.getBytes(sharedSecret),
+        ethers.toUtf8Bytes('PRIVATESWAP_STEALTH')
+      ])
+    );
+    
+    // Convert to an Ethereum address format
+    const stealthAddress = ethers.getAddress('0x' + stealthAddressBytes.slice(-40));
+    
+    // Store the ephemeral public key and stealth address mapping
+    await snap.request({
+      method: 'snap_manageState',
+      params: {
+        operation: 'update',
+        newState: {
+          stealthAddresses: {
+            ...(await getStealthAddressMapping(snap)),
+            [ephemeralKeyPair.publicKey.toString()]: stealthAddress
+          }
+        }
+      }
+    });
+    
+    return stealthAddress;
+  } catch (error: any) {
+    console.error('Error generating stealth address:', error);
+    throw new Error(`Failed to generate stealth address: ${error.message}`);
+  }
 }
 
 /**

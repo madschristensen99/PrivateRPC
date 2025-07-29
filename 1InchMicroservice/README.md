@@ -1,15 +1,15 @@
 # 🔄 PrivateRPC Microservice
 
-This microservice enables private, gas-less, atomic ETH ↔ XMR swaps by integrating the 1inch Fusion SDK (for Ethereum swaps), SwapD daemon (for Monero swaps), and Lit Protocol (for secure one-time Monero key management). It supports our tiered privacy approach, offering both a standard JSON-RPC endpoint and custom `prpc_*` methods for enhanced privacy features.
+This microservice enables private, gas-less, atomic ETH ↔ XMR swaps by integrating the 1inch Fusion SDK (for Ethereum swaps), SwapD daemon (for Monero swaps), and Lit Protocol (for secure one-time Monero key management). It provides a RESTful API that the MetaMask Snap can interact with to provide privacy-enhanced transactions.
 
 ## 🚀 Features
 
-- **Tiered Privacy**: Support for both basic privacy (RPC endpoint) and enhanced privacy (MetaMask Snap)
 - **Atomic ETH ↔ XMR Swaps**: Seamlessly swap between Ethereum and Monero with atomic guarantees
 - **One-Time Monero Keys**: Generate secure, one-time use Monero keys using Lit Protocol
 - **Modular Architecture**: Clean separation of concerns for better maintainability
-- **Dual Interface**: Both RESTful API and JSON-RPC endpoints
+- **RESTful API**: Clean API endpoints for MetaMask Snap integration
 - **Security**: Comprehensive security middleware including rate limiting, CORS, and Helmet
+- **MetaMask Snap Support**: Designed to work seamlessly with the PrivateRPC MetaMask Snap
 
 ## 🏗️ Architecture
 
@@ -127,26 +127,27 @@ GET  /api/swapd/exchange-rate      # Get current exchange rate
 GET  /api/swapd/balances           # Get wallet balances
 ```
 
-### JSON-RPC Endpoints
+### RESTful API Endpoints
 
-The service exposes a JSON-RPC server (default port 8545) with the following methods:
+The service exposes a RESTful API (default port 3000) with the following endpoints:
 
 ```
-# Standard Ethereum Methods (Forwarded to underlying node)
-eth_chainId, eth_blockNumber, eth_getBalance, eth_sendTransaction, eth_call,
-eth_estimateGas, eth_getTransactionCount, eth_getCode, eth_getStorageAt,
-eth_getBlockByNumber, eth_getBlockByHash, eth_getTransactionByHash,
-eth_getTransactionReceipt, net_version
+# Swap Operations
+POST /api/createSwap         # Create a new atomic swap
+GET  /api/getSwapStatus      # Get status of an existing swap
+GET  /api/listSwaps          # List all swaps for a wallet
+POST /api/cancelSwap         # Cancel an active swap
+GET  /api/getExchangeRate    # Get current ETH-XMR exchange rate
 
-# Custom PrivateRPC Methods (For atomic swaps and privacy features)
-prpc_createSwap         # Create a new atomic swap
-prpc_getSwapStatus      # Get status of an existing swap
-prpc_listSwaps          # List all swaps for a wallet
-prpc_cancelSwap         # Cancel an active swap
-prpc_getExchangeRate    # Get current ETH-XMR exchange rate
+# Monero Key Management
+POST /api/generateMoneroKey   # Generate a one-time Monero key pair
+POST /api/signMoneroTransaction # Sign a Monero transaction
+
+# Transaction Relay
+POST /api/relayTransaction    # Relay a meta-transaction via 1inch Fusion
 ```
 
-> **Note**: In compatibility mode, standard Ethereum methods are passed through transparently to the underlying node, and only the `prpc_*` namespace is handled by the microservice. This ensures maximum compatibility with existing dApps.
+> **Note**: These endpoints are designed to be called by the MetaMask Snap, providing a clean interface for privacy-enhanced operations.
 
 ## 🔄 Integration with Smart Contracts
 

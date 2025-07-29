@@ -2,27 +2,34 @@
 
 This document outlines the plan to make PrivateRPC fully compatible with existing wallets and dApps while preserving its privacy and atomic-swap value proposition.
 
-## Current Compatibility Issues
+## Architecture Evolution
 
-| Compatibility Problem | Current Behaviour | Fix | Rationale |
-| --------------------- | ---------------- | --- | --------- |
-| 1. ETH balance spoofing | `eth_getBalance` returns "virtual" ETH (sum of many addresses) | Stop spoofing. Provide a proxy wallet that holds real ETH and relays gasless meta-txs | Every DeFi contract uses `balanceOf` / `eth_getBalance`. Lying breaks them |
-| 2. Gas spoofing (`eth_estimateGas`) | Returns hard-coded 200k | Forward the call to the real node, then add a buffer for meta-tx overhead | dApps compute slippage, vault limits, etc. from gas limits |
-| 3. `eth_call` spoofing | Returns fake success for `createEscrow` | Remove the override; let the real call run | View functions are used by front-ends for permit checks, pricing, etc. |
-| 4. Swap-only hijacking | Only `tx.to == SwapCreatorAdapter` is handled | Expose a new JSON-RPC namespace (`prpc_*`) and a wallet snap that translates intents into meta-tx calldata | Keeps the rest of the RPC surface 100% transparent |
-| 5. Monero key UX | Lit TEE key must sign Monero TX | Wrap Lit action in a MetaMask snap that appears as a "sign external transaction" popup | Users never leave their wallet; no extra seed phrase |
+We've decided to simplify the PrivateRPC architecture by focusing on a MetaMask Snap + microservice approach, removing the custom RPC routing/hijacking layer entirely. This approach offers better compatibility with existing dApps and wallets while still providing privacy features.
+
+### Previous Approach (Deprecated)
+
+The previous approach involved intercepting and modifying standard Ethereum RPC calls, which led to compatibility issues with existing dApps and wallets.
+
+### New Approach
+
+Our new approach consists of two main components:
+
+1. **MetaMask Snap**: Handles user interaction and privacy features
+2. **Microservice**: Provides backend functionality for atomic swaps
+
+This approach resolves the following compatibility issues:
 
 ## Concrete Deliverables
 
-### Snap / Wallet Plugin
+### MetaMask Snap
 
-Adds `wallet_invokeSnap` method:
+The MetaMask Snap provides the following functionality:
 
 ```javascript
 await ethereum.request({
   method: 'wallet_invokeSnap',
   params: {
-    snapId: 'npm:private-swap-snap',
+    snapId: 'npm:private-rpc-snap',
     request: {
       method: 'prpc_createSwap',
       params: { amount: '0.1', direction: 'ETH→XMR', refundAddr: '...' }
@@ -31,13 +38,20 @@ await ethereum.request({
 });
 ```
 
-Snap internally calls the microservice REST API, fetches the Lit-signed Monero key, and returns an EIP-712 meta-tx that the microservice can relay via 1inch-Fusion.
+The Snap:
+- Calls the microservice REST API for atomic swap operations
+- Manages Monero key operations via Lit Protocol integration
+- Creates and signs EIP-712 meta-transactions for gas-less operations
+- Provides enhanced privacy features like stealth addresses
+- Handles user interaction through MetaMask's UI
 
-### RPC Proxy Mode
+### Microservice Backend
 
-- Add a flag (`COMPAT_MODE=true`) that disables all four hijacks
-- When enabled, the service behaves like a normal Base-Sepolia RPC except for the new `prpc_*` namespace
-- Wallet snaps explicitly call `prpc_*` when they need the swap flow, so normal dApps never notice
+- RESTful API for atomic swap operations
+- Integration with 1inch Fusion for Ethereum operations
+- Integration with SwapD for Monero operations
+- Secure one-time Monero key management via Lit Protocol
+- Transaction relay functionality for meta-transactions
 
 ### Gas-Sponsorship Layer
 
@@ -51,18 +65,28 @@ Snap internally calls the microservice REST API, fetches the Lit-signed Monero k
 
 ## Resulting User Flow
 
-1. User keeps MetaMask pointed to any standard Base-Sepolia RPC (Alchemy, Infura, etc.)
-2. When they want a private ETH↔XMR swap, they open the snap (or a dApp that embeds the snap)
-3. Snap asks for amount & direction, obtains Lit-signed Monero key, builds meta-tx
-4. Meta-tx is sent to the microservice via REST; microservice relays via 1inch-Fusion + ERC-4337 paymaster
-5. All other dApp interactions (Uniswap, NFT mint, etc.) continue unchanged
+1. User installs the PrivateRPC MetaMask Snap
+2. User interacts with dApps normally using their standard Ethereum provider
+3. When the user wants to perform a private transaction or atomic swap:
+   a. The user invokes the PrivateRPC Snap through MetaMask
+   b. The Snap presents a UI for configuring the transaction
+   c. The Snap communicates with the microservice to execute the operation
+   d. The transaction is processed with enhanced privacy features
 
-## Migration Checklist
+## Implementation Checklist
 
-- [ ] Remove overrides for `eth_getBalance`, `eth_estimateGas`, `eth_call`, `eth_sendTransaction`
-- [ ] Implement `COMPAT_MODE` flag
-- [ ] Publish `private-swap-snap` to the MetaMask Snaps registry
-- [ ] Provide a one-click "add snap" button on your landing page
-- [ ] Update README: deprecate "drop-in RPC replacement", advertise "install snap + keep your existing RPC"
+- [ ] Complete MetaMask Snap development
+  - [ ] Implement core swap functionality
+  - [ ] Add stealth address generation
+  - [ ] Integrate with Lit Protocol for Monero key management
+  - [ ] Create user-friendly UI components
+- [ ] Enhance microservice backend
+  - [ ] Implement RESTful API endpoints
+  - [ ] Integrate with 1inch Fusion for transaction relay
+  - [ ] Add support for meta-transactions
+  - [ ] Improve SwapD integration
+- [ ] Deploy or integrate ERC-4337 paymaster for gas sponsorship
+- [ ] Publish Snap to MetaMask Snap directory
+- [ ] Create developer documentation and examples
 
 This approach removes the fundamental incompatibility while preserving the privacy and atomic-swap value proposition of PrivateRPC.
